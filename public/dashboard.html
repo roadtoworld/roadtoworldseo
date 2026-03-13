@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian SEO — 3D Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:       #0f0f14;
+  --bg1:      #13131a;
+  --bg2:      #18181f;
+  --bg3:      #1e1e28;
+  --bg4:      #252530;
+  --bg5:      #2d2d3a;
+
+  --gold:     #c9a84c;
+  --gold2:    #e8c97a;
+  --gold3:    #a08030;
+  --gold-bg:  rgba(201,168,76,0.08);
+  --gold-glow:rgba(201,168,76,0.2);
+
+  --red:      #c94050;
+  --red-bg:   rgba(201,64,80,0.1);
+  --green:    #3a9a5c;
+  --green-bg: rgba(58,154,92,0.1);
+  --blue:     #4070c0;
+  --blue-bg:  rgba(64,112,192,0.1);
+  --amber:    #c08040;
+  --amber-bg: rgba(192,128,64,0.1);
+
+  --text:     #e8e4dc;
+  --text2:    #9090a0;
+  --text3:    #50505e;
+  --text4:    #30303c;
+
+  --edge-light: rgba(255,255,255,0.12);
+  --edge-dark:  rgba(0,0,0,0.5);
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.06) inset;
+  --shadow-md:  0 4px 20px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.08) inset;
+  --shadow-lg:  0 8px 40px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.1) inset;
+  --shadow-xl:  0 16px 60px rgba(0,0,0,0.7), 0 2px 0 rgba(255,255,255,0.1) inset;
+
+  --r:   10px;
+  --r-sm: 6px;
+  --r-lg: 16px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── 3D depth background ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 800px 600px at 20% 20%, rgba(201,168,76,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 600px 400px at 80% 80%, rgba(64,112,192,0.04) 0%, transparent 70%),
+    repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.01) 60px, rgba(255,255,255,0.01) 61px),
+    repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.01) 60px, rgba(255,255,255,0.01) 61px);
+  pointer-events: none;
+}
+
+/* ── 3D card mixin ── */
+.card-3d {
+  background: linear-gradient(145deg, var(--bg3) 0%, var(--bg2) 60%, var(--bg1) 100%);
+  border: 1px solid var(--edge-light);
+  border-bottom-color: var(--edge-dark);
+  border-right-color: var(--edge-dark);
+  box-shadow: var(--shadow-md);
+  border-radius: var(--r);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-3d:hover {
+  transform: translateY(-3px) translateZ(0);
+  box-shadow: var(--shadow-lg);
+}
+.card-3d-lg {
+  background: linear-gradient(160deg, var(--bg3) 0%, var(--bg2) 50%, var(--bg1) 100%);
+  border: 1px solid var(--edge-light);
+  border-bottom-color: var(--edge-dark);
+  border-right-color: var(--edge-dark);
+  box-shadow: var(--shadow-xl);
+  border-radius: var(--r-lg);
+}
+
+/* ── Layout ── */
+.layout { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 230px; flex-shrink: 0;
+  background: linear-gradient(180deg, var(--bg2) 0%, var(--bg1) 100%);
+  border-right: 1px solid var(--edge-light);
+  box-shadow: 4px 0 24px rgba(0,0,0,0.4);
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+}
+
+.logo-zone {
+  padding: 22px 18px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  background: linear-gradient(135deg, rgba(201,168,76,0.06), transparent);
+}
+.logo-3d {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+}
+.logo-cube {
+  width: 38px; height: 38px; position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(15deg) rotateY(-20deg);
+  flex-shrink: 0;
+}
+.cube-face {
+  position: absolute; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px;
+}
+.face-front  { background: var(--gold); color: var(--bg); transform: translateZ(14px); top:5px; left:5px; }
+.face-top    { background: var(--gold2); color: var(--bg); transform: rotateX(90deg) translateZ(14px); top:5px; left:5px; opacity:0.8; }
+.face-right  { background: var(--gold3); color: var(--bg); transform: rotateY(90deg) translateZ(14px); top:5px; left:5px; opacity:0.6; }
+
+.logo-text-wrap {}
+.logo-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: 2px;
+  background: linear-gradient(135deg, var(--gold2), var(--gold));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.logo-sub { font-size: 9px; color: var(--text3); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 2px; }
+
+.domain-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-bottom-color: rgba(0,0,0,0.3);
+  border-radius: var(--r-sm);
+  padding: 8px 11px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+  cursor: pointer; transition: all 0.15s;
+}
+.domain-pill:hover { border-color: rgba(201,168,76,0.3); }
+.domain-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green); box-shadow: 0 0 6px var(--green);
+  animation: pulse 2s infinite; flex-shrink: 0;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.9)} }
+.domain-txt {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  color: rgba(232,228,220,0.6); flex: 1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Nav */
+.nav-scroll { flex: 1; overflow-y: auto; padding: 16px 0; scrollbar-width: none; }
+.nav-scroll::-webkit-scrollbar { display: none; }
+.nav-group { margin-bottom: 18px; }
+.nav-group-lbl {
+  font-size: 9px; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--text4);
+  padding: 0 18px; margin-bottom: 3px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 18px; cursor: pointer;
+  color: var(--text3); font-size: 13px; font-weight: 400;
+  transition: all 0.12s; position: relative;
+  border-left: 3px solid transparent;
+}
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active {
+  color: var(--gold2);
+  background: linear-gradient(90deg, rgba(201,168,76,0.08), transparent);
+  border-left-color: var(--gold);
+}
+.nav-badge {
+  margin-left: auto; font-family: 'DM Mono', monospace;
+  font-size: 10px; padding: 1px 7px; border-radius: 3px;
+}
+.nb-red { background: rgba(201,64,80,0.2); color: #e07080; }
+.nb-ok  { background: rgba(58,154,92,0.15); color: #60b878; }
+.nb-dim { background: rgba(255,255,255,0.05); color: var(--text3); }
+
+/* Score panel */
+.score-panel {
+  padding: 14px 18px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  background: linear-gradient(135deg, rgba(201,168,76,0.04), transparent);
+}
+.sp-label { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+.sp-ring { position: relative; width: 100%; margin-bottom: 10px; }
+.sp-ring svg { width: 100%; height: auto; }
+.sp-num {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px; letter-spacing: 1px;
+  background: linear-gradient(135deg, var(--gold2), var(--gold));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sp-trend { text-align: center; font-size: 11px; color: #60b878; }
+
+/* ── Main ── */
+.main { margin-left: 230px; flex: 1; display: flex; flex-direction: column; }
+
+/* ── Topbar ── */
+.topbar {
+  background: linear-gradient(90deg, var(--bg2), var(--bg1));
+  border-bottom: 1px solid var(--edge-light);
+  box-shadow: 0 2px 20px rgba(0,0,0,0.4), 0 -1px 0 rgba(255,255,255,0.04) inset;
+  padding: 0 24px; height: 54px;
+  display: flex; align-items: center; gap: 10px;
+  position: sticky; top: 0; z-index: 50;
+}
+
+.url-wrap {
+  flex: 1; max-width: 480px;
+  display: flex; align-items: center;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-bottom-color: rgba(0,0,0,0.4);
+  border-radius: var(--r-sm);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04);
+  overflow: hidden; transition: border-color 0.2s;
+}
+.url-wrap:focus-within {
+  border-color: rgba(201,168,76,0.4);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 0 3px rgba(201,168,76,0.08), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.url-prefix {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  color: var(--text3); padding: 0 10px;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  line-height: 38px; white-space: nowrap;
+}
+.url-input {
+  background: none; border: none; outline: none;
+  color: var(--text); font-family: 'DM Mono', monospace; font-size: 12px;
+  padding: 0 12px; height: 38px; flex: 1;
+}
+.url-input::placeholder { color: var(--text3); }
+
+.run-btn {
+  height: 38px; padding: 0 20px;
+  background: linear-gradient(135deg, var(--gold2) 0%, var(--gold) 50%, var(--gold3) 100%);
+  border: none; border-radius: var(--r-sm);
+  color: #1a1408; font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(201,168,76,0.35), 0 1px 0 rgba(255,255,255,0.3) inset;
+  transition: all 0.15s;
+}
+.run-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(201,168,76,0.5), 0 1px 0 rgba(255,255,255,0.3) inset;
+}
+.run-btn:active { transform: translateY(1px); box-shadow: 0 2px 6px rgba(201,168,76,0.3); }
+
+.tb-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.tb-chip {
+  height: 30px; padding: 0 12px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-bottom-color: rgba(0,0,0,0.3);
+  border-radius: var(--r-sm);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  color: var(--text2); font-size: 11px; font-weight: 500;
+  display: flex; align-items: center; gap: 5px;
+  cursor: pointer; transition: all 0.15s;
+}
+.tb-chip:hover { border-color: rgba(255,255,255,0.14); color: var(--text); transform: translateY(-1px); }
+.live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 1.5s infinite; }
+
+/* ── Content ── */
+.content { padding: 24px; flex: 1; }
+.page { display: none; }
+.page.active { display: block; animation: pageIn 0.25s ease; }
+@keyframes pageIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+/* ── Page header ── */
+.ph { margin-bottom: 22px; }
+.ph-eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-weight: 500; margin-bottom: 4px; }
+.ph-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 34px; letter-spacing: 2px; line-height: 1;
+  background: linear-gradient(135deg, var(--text) 0%, var(--text2) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.ph-row { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.ph-sub { font-size: 12px; color: var(--text3); margin-top: 4px; font-weight: 300; }
+
+/* ── Buttons ── */
+.btn {
+  height: 32px; padding: 0 14px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.1);
+  border-bottom-color: rgba(0,0,0,0.3);
+  border-radius: var(--r-sm);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+  color: var(--text2); font-size: 11px; font-weight: 500;
+  cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+.btn:hover { border-color: rgba(255,255,255,0.15); color: var(--text); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08); }
+.btn:active { transform: translateY(1px); }
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold2), var(--gold), var(--gold3));
+  color: #1a1408; border-color: transparent;
+  box-shadow: 0 4px 14px rgba(201,168,76,0.3), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.btn-gold:hover { box-shadow: 0 6px 20px rgba(201,168,76,0.45), inset 0 1px 0 rgba(255,255,255,0.25); color: #1a1408; }
+
+/* ── KPI row ── */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+
+.kpi {
+  background: linear-gradient(145deg, var(--bg3) 0%, var(--bg2) 60%, var(--bg1) 100%);
+  border: 1px solid var(--edge-light);
+  border-bottom-color: var(--edge-dark);
+  border-right-color: rgba(0,0,0,0.4);
+  border-radius: var(--r);
+  padding: 18px 20px 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.07);
+  transition: all 0.2s; cursor: default; position: relative; overflow: hidden;
+}
+.kpi::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
+.kpi:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.09); }
+.kpi-label {
+  font-size: 9px; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--text3); margin-bottom: 10px;
+}
+.kpi-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 44px; line-height: 1; letter-spacing: 1px;
+}
+.kv-gold  { background: linear-gradient(135deg, var(--gold2), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.kv-red   { background: linear-gradient(135deg, #e06070, var(--red)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.kv-green { background: linear-gradient(135deg, #60d080, var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.kv-blue  { background: linear-gradient(135deg, #70a0e0, var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.kv-plain { color: var(--text); }
+.kpi-foot { margin-top: 8px; }
+.kpi-tag {
+  display: inline-block; font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 4px; letter-spacing: 0.04em;
+}
+.kt-up    { background: rgba(58,154,92,0.15); color: #60d080; border: 1px solid rgba(58,154,92,0.2); }
+.kt-down  { background: rgba(201,64,80,0.15); color: #e07080; border: 1px solid rgba(201,64,80,0.2); }
+.kt-warn  { background: rgba(201,168,76,0.12); color: var(--gold2); border: 1px solid rgba(201,168,76,0.2); }
+.kt-gray  { background: rgba(255,255,255,0.05); color: var(--text2); border: 1px solid rgba(255,255,255,0.08); }
+.kpi-bar  { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; }
+
+/* ── Panel ── */
+.panel {
+  background: linear-gradient(145deg, var(--bg3) 0%, var(--bg2) 60%, var(--bg1) 100%);
+  border: 1px solid var(--edge-light);
+  border-bottom-color: var(--edge-dark);
+  border-right-color: rgba(0,0,0,0.4);
+  border-radius: var(--r);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+  margin-bottom: 16px; overflow: hidden; position: relative;
+}
+.panel::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  pointer-events: none;
+}
+.panel-hd {
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  background: linear-gradient(135deg, rgba(255,255,255,0.02), transparent);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-hd-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px; letter-spacing: 1.5px; color: var(--text);
+}
+.panel-hd-sub { font-size: 11px; color: var(--text3); font-weight: 300; margin-top: 1px; }
+.panel-bd { padding: 18px 20px; }
+
+.grid-21 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+.grid-3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.grid-2  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+/* ── Issue rows ── */
+.issue {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer; transition: all 0.12s;
+}
+.issue:last-child { border-bottom: none; }
+.issue:hover { background: rgba(255,255,255,0.02); margin: 0 -20px; padding: 10px 20px; border-radius: 6px; }
+.sev-bar { width: 3px; border-radius: 2px; flex-shrink: 0; align-self: stretch; min-height: 16px; }
+.sc { background: linear-gradient(to bottom, #e07080, var(--red)); box-shadow: 0 0 6px rgba(201,64,80,0.4); }
+.sw { background: linear-gradient(to bottom, var(--gold2), var(--gold)); }
+.si { background: linear-gradient(to bottom, #70a0e0, var(--blue)); }
+.sp { background: linear-gradient(to bottom, #60d080, var(--green)); box-shadow: 0 0 6px rgba(58,154,92,0.3); }
+.issue-bd { flex: 1; }
+.issue-title { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.3; }
+.issue-desc  { font-size: 11px; color: var(--text3); margin-top: 2px; font-weight: 300; }
+.issue-cnt {
+  font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500;
+  padding: 2px 8px; border-radius: 4px; flex-shrink: 0;
+  background: rgba(255,255,255,0.05); color: var(--text2);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.ic-r { background: rgba(201,64,80,0.15); color: #e07080; }
+.ic-w { background: rgba(201,168,76,0.12); color: var(--gold2); }
+.ic-g { background: rgba(58,154,92,0.12); color: #60d080; }
+
+/* ── Bar rows ── */
+.bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.bar-row:last-child { margin-bottom: 0; }
+.bar-lbl { font-size: 11px; color: var(--text2); width: 90px; flex-shrink: 0; font-weight: 500; }
+.bar-track {
+  flex: 1; height: 8px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 4px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%; border-radius: 4px;
+  box-shadow: 0 0 8px currentColor;
+  transition: width 1.2s cubic-bezier(.34,1.56,.64,1);
+}
+.bar-val { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); width: 28px; text-align: right; }
+
+/* ── Table ── */
+.tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.tbl th {
+  text-align: left; padding: 9px 14px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.14em;
+  color: var(--text4); text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.01);
+}
+.tbl td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tbody tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* Chips */
+.chip {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; font-weight: 500; padding: 2px 8px;
+  border-radius: 4px; display: inline-block;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.c200 { background: rgba(58,154,92,0.15); color: #60d080; border: 1px solid rgba(58,154,92,0.2); }
+.c301 { background: rgba(64,112,192,0.15); color: #70a0e0; border: 1px solid rgba(64,112,192,0.2); }
+.c404 { background: rgba(201,64,80,0.15); color: #e07080; border: 1px solid rgba(201,64,80,0.2); }
+.c500 { background: rgba(201,128,64,0.15); color: #e0a060; border: 1px solid rgba(201,128,64,0.2); }
+
+/* Rank badges */
+.rank {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; font-weight: 500; padding: 2px 8px;
+  border-radius: 4px; display: inline-block;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.r1 { background: rgba(58,154,92,0.15); color: #60d080; }
+.r2 { background: rgba(64,112,192,0.12); color: #70a0e0; }
+.r3 { background: rgba(201,168,76,0.12); color: var(--gold2); }
+.r4 { background: rgba(255,255,255,0.04); color: var(--text3); }
+
+/* ── Chart wrap ── */
+.chart-wrap    { position: relative; height: 200px; }
+.chart-wrap-sm { position: relative; height: 160px; }
+
+/* ── Vitals grid ── */
+.vitals-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
+.vital {
+  background: linear-gradient(145deg, var(--bg3), var(--bg2));
+  border: 1px solid var(--edge-light);
+  border-bottom-color: var(--edge-dark);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  transition: all 0.2s;
+}
+.vital:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08); }
+.vital-name { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text3); font-weight: 600; margin-bottom: 8px; }
+.vital-val  { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; line-height: 1; }
+.vital-desc { font-size: 11px; color: var(--text3); margin-top: 4px; font-weight: 300; }
+.vital-bar  { height: 3px; border-radius: 2px; margin-top: 10px; }
+.vg { background: linear-gradient(135deg, #60d080, var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.vw { background: linear-gradient(135deg, var(--gold2), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.vr { background: linear-gradient(135deg, #e07080, var(--red)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.vbg { background: linear-gradient(90deg, var(--green), #60d080); box-shadow: 0 0 8px rgba(58,154,92,0.4); }
+.vbw { background: linear-gradient(90deg, var(--gold), var(--gold2)); box-shadow: 0 0 8px rgba(201,168,76,0.4); }
+.vbr { background: linear-gradient(90deg, var(--red), #e07080); box-shadow: 0 0 8px rgba(201,64,80,0.4); }
+
+/* ── Backlink rows ── */
+.bl-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.bl-row:last-child { border-bottom: none; }
+.bl-avatar {
+  width: 36px; height: 36px; border-radius: var(--r-sm);
+  background: linear-gradient(135deg, var(--bg4), var(--bg5));
+  border: 1px solid var(--edge-light);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 18px;
+  color: var(--gold); flex-shrink: 0;
+}
+.bl-domain { font-size: 13px; font-weight: 500; flex: 1; }
+.bl-meta   { font-size: 11px; color: var(--text3); margin-top: 2px; display: flex; gap: 10px; }
+.bl-da     { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; color: var(--gold2); }
+.bl-type   { font-size: 10px; padding: 1px 7px; border-radius: 3px; font-weight: 600; }
+.bl-do { background: rgba(58,154,92,0.12); color: #60d080; }
+.bl-no { background: rgba(255,255,255,0.05); color: var(--text3); }
+
+/* ── Competitor bars ── */
+.comp-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.comp-row:last-child { border-bottom: none; }
+.comp-name { font-size: 12px; font-weight: 500; width: 150px; flex-shrink: 0; }
+.comp-track {
+  flex: 1; height: 22px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 4px;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.3);
+  overflow: hidden; position: relative;
+}
+.comp-fill {
+  height: 100%; display: flex; align-items: center; padding-left: 10px;
+  transition: width 1.2s ease; position: relative;
+}
+.comp-fill::after {
+  content: ''; position: absolute; top: 0; right: 0; width: 20px; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08));
+}
+.comp-fill span { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.8); }
+.comp-score { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text2); width: 40px; text-align: right; }
+
+/* ── Crawl map ── */
+.map-wrap { display: flex; flex-wrap: wrap; gap: 4px; }
+.map-node {
+  width: 16px; height: 16px; border-radius: 3px;
+  cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;
+}
+.map-node:hover { transform: scale(1.5); z-index: 10; position: relative; }
+.mn-ok   { background: rgba(58,154,92,0.7); box-shadow: 0 0 4px rgba(58,154,92,0.3); }
+.mn-warn { background: rgba(201,168,76,0.65); box-shadow: 0 0 4px rgba(201,168,76,0.3); }
+.mn-err  { background: rgba(201,64,80,0.7); box-shadow: 0 0 4px rgba(201,64,80,0.4); }
+.mn-rdir { background: rgba(64,112,192,0.65); box-shadow: 0 0 4px rgba(64,112,192,0.3); }
+
+/* ── Tags ── */
+.tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 3px; }
+.tag-c { background: rgba(201,64,80,0.15); color: #e07080; }
+.tag-w { background: rgba(201,168,76,0.12); color: var(--gold2); }
+.tag-i { background: rgba(64,112,192,0.12); color: #70a0e0; }
+.tag-p { background: rgba(58,154,92,0.12); color: #60d080; }
+
+/* ── Trend ── */
+.t-up   { color: #60d080; font-size: 11px; font-weight: 600; }
+.t-down { color: #e07080; font-size: 11px; font-weight: 600; }
+.t-flat { color: var(--text3); font-size: 11px; }
+
+/* ── Sparkline ── */
+.spark { display: inline-flex; align-items: flex-end; gap: 2px; vertical-align: middle; }
+.spark-b { width: 3px; border-radius: 1px; }
+
+/* ── Select ── */
+select.filt {
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.1);
+  border-bottom-color: rgba(0,0,0,0.3);
+  color: var(--text2); font-size: 11px; padding: 5px 10px;
+  border-radius: var(--r-sm); outline: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* ── Scan overlay ── */
+#scanOverlay {
+  display: none; position: fixed; inset: 0; z-index: 9999;
+  background: rgba(15,15,20,0.96);
+  backdrop-filter: blur(12px);
+  flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+}
+#scanOverlay.show { display: flex; }
+.scan-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px; letter-spacing: 4px;
+  background: linear-gradient(135deg, var(--gold2), var(--gold));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.scan-spinner {
+  width: 70px; height: 70px;
+  border: 2px solid rgba(255,255,255,0.06);
+  border-top-color: var(--gold2);
+  border-right-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  box-shadow: 0 0 20px var(--gold-glow);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.scan-msg { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text3); letter-spacing: 0.1em; }
+.scan-prog-outer { width: 300px; height: 2px; background: rgba(255,255,255,0.06); border-radius: 1px; }
+.scan-prog-inner { height: 100%; background: linear-gradient(90deg, var(--gold3), var(--gold2)); border-radius: 1px; width: 0; transition: width 0.35s ease; box-shadow: 0 0 8px var(--gold-glow); }
+.scan-steps { display: flex; flex-direction: column; gap: 5px; }
+.scan-step { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text4); display: flex; align-items: center; gap: 8px; transition: color 0.2s; }
+.scan-step::before { content: '○'; font-size: 10px; }
+.scan-step.done { color: var(--gold); }
+.scan-step.done::before { content: '◉'; }
+
+/* ── Responsive ── */
+@media(max-width:1200px){ .kpi-row{grid-template-columns:repeat(2,1fr);} .grid-21{grid-template-columns:1fr;} .grid-3{grid-template-columns:1fr 1fr;} }
+@media(max-width:900px){ .sidebar{display:none;} .main{margin-left:0;} .vitals-grid{grid-template-columns:1fr 1fr;} }
+@media(max-width:600px){ .kpi-row{grid-template-columns:1fr 1fr;} .content{padding:14px;} }
+
+/* ── Setting input ── */
+.sett-input {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-bottom-color: rgba(0,0,0,0.3);
+  border-radius: var(--r-sm);
+  color: var(--text); font-family: 'DM Mono', monospace; font-size: 12px;
+  padding: 9px 12px; outline: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
+  transition: border-color 0.2s;
+}
+.sett-input:focus { border-color: rgba(201,168,76,0.4); box-shadow: 0 2px 8px rgba(0,0,0,0.2), 0 0 0 3px rgba(201,168,76,0.07); }
+.sett-lbl { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+<!-- Scan Overlay -->
+<div id="scanOverlay">
+  <div class="scan-title">MERIDIAN</div>
+  <div class="scan-spinner"></div>
+  <div class="scan-msg" id="scanMsg">INITIALIZING...</div>
+  <div class="scan-prog-outer"><div class="scan-prog-inner" id="scanProg"></div></div>
+  <div class="scan-steps" id="scanSteps"></div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo-zone">
+    <div class="logo-3d">
+      <div class="logo-cube">
+        <div class="cube-face face-front">M</div>
+        <div class="cube-face face-top"></div>
+        <div class="cube-face face-right"></div>
+      </div>
+      <div class="logo-text-wrap">
+        <div class="logo-name">MERIDIAN</div>
+        <div class="logo-sub">SEO Intelligence</div>
+      </div>
+    </div>
+    <div class="domain-pill" onclick="document.getElementById('urlInput').focus()">
+      <div class="domain-dot"></div>
+      <div class="domain-txt" id="sidebarDomain">example.com</div>
+    </div>
+  </div>
+
+  <div class="nav-scroll">
+    <div class="nav-group">
+      <div class="nav-group-lbl">Overview</div>
+      <div class="nav-item active" onclick="go('overview',this)">Dashboard<span class="nav-badge nb-ok">72</span></div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-lbl">Audit</div>
+      <div class="nav-item" onclick="go('technical',this)">Technical SEO<span class="nav-badge nb-red">7</span></div>
+      <div class="nav-item" onclick="go('onpage',this)">On-Page<span class="nav-badge nb-red">4</span></div>
+      <div class="nav-item" onclick="go('speed',this)">Page Speed<span class="nav-badge nb-dim">PSI</span></div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-lbl">Intelligence</div>
+      <div class="nav-item" onclick="go('keywords',this)">Keywords<span class="nav-badge nb-dim">284</span></div>
+      <div class="nav-item" onclick="go('backlinks',this)">Backlinks<span class="nav-badge nb-dim">1.8k</span></div>
+      <div class="nav-item" onclick="go('competitors',this)">Competitors</div>
+      <div class="nav-item" onclick="go('crawlmap',this)">Crawl Map</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-lbl">System</div>
+      <div class="nav-item" onclick="doExportCSV()">Export CSV</div>
+      <div class="nav-item" onclick="go('settings',this)">Settings</div>
+    </div>
+  </div>
+
+  <div class="score-panel">
+    <div class="sp-label">Overall Health</div>
+    <div class="sp-ring">
+      <svg viewBox="0 0 100 55">
+        <defs>
+          <linearGradient id="ringG" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#a08030"/>
+            <stop offset="50%" stop-color="#c9a84c"/>
+            <stop offset="100%" stop-color="#e8c97a"/>
+          </linearGradient>
+        </defs>
+        <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6" stroke-linecap="round"/>
+        <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="url(#ringG)" stroke-width="6" stroke-linecap="round"
+          stroke-dasharray="125.6" stroke-dashoffset="34" style="filter:drop-shadow(0 0 4px rgba(201,168,76,0.5))"/>
+      </svg>
+      <div class="sp-num">72</div>
+    </div>
+    <div class="sp-trend">▲ +4 pts this week</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="url-wrap">
+      <span class="url-prefix">https://</span>
+      <input class="url-input" id="urlInput" placeholder="domain.com" value="example.com"
+        oninput="document.getElementById('sidebarDomain').textContent=this.value">
+    </div>
+    <button class="run-btn" onclick="runAudit()">Run Audit</button>
+    <div class="tb-right">
+      <div class="tb-chip"><div class="live-dot"></div>Live</div>
+      <div class="tb-chip" onclick="go('keywords',null)">284 keywords</div>
+      <div class="tb-chip" onclick="doExportCSV()">↓ CSV</div>
+      <div class="tb-chip" onclick="doExportPDF()">↓ PDF</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+  <!-- OVERVIEW -->
+  <div id="page-overview" class="page active">
+    <div class="ph ph-row">
+      <div>
+        <div class="ph-eyebrow">SEO Intelligence Platform</div>
+        <div class="ph-title">AUDIT OVERVIEW</div>
+        <div class="ph-sub">example.com · 142 pages · GSC + PSI + GA4 + Bing · Updated just now</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="go('technical',null)">View Issues</button>
+        <button class="btn btn-gold" onclick="doExportPDF()">Export Report</button>
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">SEO Health Score</div>
+        <div class="kpi-value kv-gold">72</div>
+        <div class="kpi-foot"><span class="kpi-tag kt-warn">▲ +4 this week</span></div>
+        <div class="kpi-bar" style="background:linear-gradient(90deg,var(--gold3),var(--gold2),transparent)"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Critical Issues</div>
+        <div class="kpi-value kv-red">7</div>
+        <div class="kpi-foot"><span class="kpi-tag kt-down">2 new</span></div>
+        <div class="kpi-bar" style="background:linear-gradient(90deg,var(--red),transparent)"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Pages Indexed</div>
+        <div class="kpi-value kv-green">128</div>
+        <div class="kpi-foot"><span class="kpi-tag kt-up">▲ 6 new</span></div>
+        <div class="kpi-bar" style="background:linear-gradient(90deg,var(--green),transparent)"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Avg. Position</div>
+        <div class="kpi-value kv-plain">14.2</div>
+        <div class="kpi-foot"><span class="kpi-tag kt-up">▲ improved</span></div>
+        <div class="kpi-bar" style="background:linear-gradient(90deg,var(--text2),transparent)"></div>
+      </div>
+    </div>
+
+    <div class="grid-21">
+      <div>
+        <div class="panel">
+          <div class="panel-hd">
+            <div><div class="panel-hd-title">Organic Traffic</div><div class="panel-hd-sub">Sessions via GA4 API · free</div></div>
+            <select class="filt" onchange="updateTraffic(this.value)">
+              <option value="30">30 days</option>
+              <option value="90">90 days</option>
+              <option value="180">6 months</option>
+            </select>
+          </div>
+          <div class="panel-bd">
+            <div class="chart-wrap"><canvas id="trafficChart"></canvas></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-hd">
+            <div><div class="panel-hd-title">Top Issues</div><div class="panel-hd-sub">Sorted by SEO impact</div></div>
+            <button class="btn" onclick="go('technical',null)">All →</button>
+          </div>
+          <div class="panel-bd" style="padding-top:6px;padding-bottom:6px;">
+            <div class="issue"><div class="sev-bar sc"></div><div class="issue-bd"><div class="issue-title">Missing meta descriptions</div><div class="issue-desc">14 pages — critical SERP CTR impact</div></div><span class="issue-cnt ic-r">14</span></div>
+            <div class="issue"><div class="sev-bar sc"></div><div class="issue-bd"><div class="issue-title">Duplicate title tags</div><div class="issue-desc">6 pages share identical titles</div></div><span class="issue-cnt ic-r">6</span></div>
+            <div class="issue"><div class="sev-bar sc"></div><div class="issue-bd"><div class="issue-title">Broken internal links (404)</div><div class="issue-desc">Wastes crawl budget</div></div><span class="issue-cnt ic-r">3</span></div>
+            <div class="issue"><div class="sev-bar sw"></div><div class="issue-bd"><div class="issue-title">Images missing alt text</div><div class="issue-desc">28 images across 18 pages</div></div><span class="issue-cnt ic-w">28</span></div>
+            <div class="issue"><div class="sev-bar sw"></div><div class="issue-bd"><div class="issue-title">Slow LCP on mobile (&gt;4s)</div><div class="issue-desc">3 pages failing Core Web Vitals</div></div><span class="issue-cnt ic-w">3</span></div>
+            <div class="issue"><div class="sev-bar si"></div><div class="issue-bd"><div class="issue-title">Missing canonical tags</div><div class="issue-desc">9 pages — low priority</div></div><span class="issue-cnt">9</span></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="panel-hd"><div class="panel-hd-title">Score Breakdown</div></div>
+          <div class="panel-bd" style="display:flex;flex-direction:column;align-items:center;padding-top:20px;">
+            <div style="position:relative;width:140px;height:140px;margin-bottom:12px;">
+              <svg width="140" height="140" viewBox="0 0 140 140">
+                <defs>
+                  <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#a08030"/>
+                    <stop offset="50%" stop-color="#c9a84c"/>
+                    <stop offset="100%" stop-color="#e8c97a"/>
+                  </linearGradient>
+                </defs>
+                <circle cx="70" cy="70" r="56" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="10"/>
+                <circle cx="70" cy="70" r="56" fill="none" stroke="url(#scoreGrad)" stroke-width="10"
+                  stroke-dasharray="351.9" stroke-dashoffset="98"
+                  stroke-linecap="round"
+                  transform="rotate(-90 70 70)"
+                  style="filter:drop-shadow(0 0 8px rgba(201,168,76,0.5));transition:stroke-dashoffset 1.5s ease"/>
+              </svg>
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:1px;background:linear-gradient(135deg,var(--gold2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;">72</div>
+                <div style="font-size:10px;color:var(--text3);letter-spacing:0.12em;text-transform:uppercase;font-weight:600;">Fair</div>
+              </div>
+            </div>
+          </div>
+          <div class="panel-bd" style="padding-top:6px;">
+            <div class="bar-row"><span class="bar-lbl">Technical</span><div class="bar-track"><div class="bar-fill" style="width:64%;background:linear-gradient(90deg,var(--gold3),var(--gold2));color:var(--gold)"></div></div><span class="bar-val">64</span></div>
+            <div class="bar-row"><span class="bar-lbl">On-Page</span><div class="bar-track"><div class="bar-fill" style="width:78%;background:linear-gradient(90deg,#2a7a40,#60d080);color:var(--green)"></div></div><span class="bar-val">78</span></div>
+            <div class="bar-row"><span class="bar-lbl">Page Speed</span><div class="bar-track"><div class="bar-fill" style="width:55%;background:linear-gradient(90deg,#902030,#e07080);color:var(--red)"></div></div><span class="bar-val">55</span></div>
+            <div class="bar-row"><span class="bar-lbl">Backlinks</span><div class="bar-track"><div class="bar-fill" style="width:82%;background:linear-gradient(90deg,#304090,#70a0e0);color:var(--blue)"></div></div><span class="bar-val">82</span></div>
+            <div class="bar-row"><span class="bar-lbl">Keywords</span><div class="bar-track"><div class="bar-fill" style="width:71%;background:linear-gradient(90deg,var(--bg5),rgba(255,255,255,0.3));color:var(--text2)"></div></div><span class="bar-val">71</span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-hd"><div class="panel-hd-title">Core Web Vitals</div><button class="btn" onclick="go('speed',null)">Details →</button></div>
+          <div class="panel-bd">
+            <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.04);">
+              <div class="vital-name" style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);font-weight:600;margin-bottom:6px;">LCP · Largest Contentful Paint</div>
+              <div class="vital-val vw">2.8s</div>
+              <div class="vital-desc" style="font-size:11px;color:var(--text3);margin-top:3px;font-weight:300;">Needs improvement · target &lt;2.5s</div>
+              <div class="vital-bar vbw" style="width:65%"></div>
+            </div>
+            <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.04);">
+              <div class="vital-name" style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);font-weight:600;margin-bottom:6px;">CLS · Cumulative Layout Shift</div>
+              <div class="vital-val vg">0.04</div>
+              <div class="vital-desc" style="font-size:11px;color:var(--text3);margin-top:3px;font-weight:300;">Good · target &lt;0.1</div>
+              <div class="vital-bar vbg" style="width:90%"></div>
+            </div>
+            <div>
+              <div class="vital-name" style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);font-weight:600;margin-bottom:6px;">FID · First Input Delay</div>
+              <div class="vital-val vg">48ms</div>
+              <div class="vital-desc" style="font-size:11px;color:var(--text3);margin-top:3px;font-weight:300;">Good · target &lt;100ms</div>
+              <div class="vital-bar vbg" style="width:85%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <div class="panel">
+        <div class="panel-hd"><div class="panel-hd-title">Top Keywords</div><button class="btn" onclick="go('keywords',null)">All →</button></div>
+        <table class="tbl">
+          <thead><tr><th>Keyword</th><th>Pos</th><th>Clicks</th></tr></thead>
+          <tbody>
+            <tr><td>seo audit tool</td><td><span class="rank r1">#2</span></td><td>1,240</td></tr>
+            <tr><td>website seo checker</td><td><span class="rank r2">#7</span></td><td>890</td></tr>
+            <tr><td>free seo analyzer</td><td><span class="rank r2">#9</span></td><td>654</td></tr>
+            <tr><td>site audit software</td><td><span class="rank r3">#14</span></td><td>312</td></tr>
+            <tr><td>technical seo check</td><td><span class="rank r4">#22</span></td><td>201</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <div class="panel-hd"><div class="panel-hd-title">Indexed Pages</div></div>
+        <div class="panel-bd">
+          <div class="chart-wrap-sm"><canvas id="indexChart"></canvas></div>
+          <div style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap;">
+            <span style="font-size:11px;display:flex;align-items:center;gap:5px;color:var(--text2);"><span style="width:8px;height:8px;background:rgba(58,154,92,0.7);box-shadow:0 0 6px rgba(58,154,92,0.4);display:inline-block;border-radius:2px;"></span>Indexed 128</span>
+            <span style="font-size:11px;display:flex;align-items:center;gap:5px;color:var(--text2);"><span style="width:8px;height:8px;background:rgba(201,168,76,0.6);display:inline-block;border-radius:2px;"></span>Excluded 9</span>
+            <span style="font-size:11px;display:flex;align-items:center;gap:5px;color:var(--text2);"><span style="width:8px;height:8px;background:rgba(80,80,94,0.6);display:inline-block;border-radius:2px;"></span>Blocked 5</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd"><div class="panel-hd-title">Clicks by Device</div></div>
+        <div class="panel-bd">
+          <div class="chart-wrap-sm"><canvas id="deviceChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TECHNICAL -->
+  <div id="page-technical" class="page">
+    <div class="ph ph-row">
+      <div><div class="ph-eyebrow">Crawler Engine</div><div class="ph-title">TECHNICAL SEO</div><div class="ph-sub">142 pages · Puppeteer · 2.4s crawl time</div></div>
+      <div style="display:flex;gap:8px;">
+        <select class="filt" id="statusFilter" onchange="filterCrawl()">
+          <option value="all">All statuses</option>
+          <option value="200">200 OK</option>
+          <option value="301">301 Redirect</option>
+          <option value="404">404 Error</option>
+        </select>
+        <button class="btn btn-gold" onclick="doExportCSV()">↓ Export CSV</button>
+      </div>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">Crawled</div><div class="kpi-value kv-plain">142</div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--text2),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Broken 404</div><div class="kpi-value kv-red">3</div><div class="kpi-foot"><span class="kpi-tag kt-down">Critical</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--red),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Redirects</div><div class="kpi-value kv-blue">11</div><div class="kpi-foot"><span class="kpi-tag kt-warn">Review chains</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--blue),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Healthy 200</div><div class="kpi-value kv-green">128</div><div class="kpi-foot"><span class="kpi-tag kt-up">90%</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--green),transparent)"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd"><div><div class="panel-hd-title">Crawl Results</div><div class="panel-hd-sub" id="crawlCount">Showing 6 of 142 pages</div></div></div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead><tr><th>URL</th><th>Status</th><th>Title</th><th>H1</th><th>Meta</th><th>Canonical</th><th>Issues</th></tr></thead>
+          <tbody id="crawlBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEYWORDS -->
+  <div id="page-keywords" class="page">
+    <div class="ph ph-row">
+      <div><div class="ph-eyebrow">Google Search Console API</div><div class="ph-title">KEYWORD RANKINGS</div><div class="ph-sub">284 keywords · real position data · 100% free</div></div>
+      <div style="display:flex;gap:8px;"><select class="filt"><option>All positions</option><option>Top 3</option><option>Top 10</option><option>Top 20</option></select><button class="btn btn-gold">↓ Export</button></div>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">Total Keywords</div><div class="kpi-value kv-plain">284</div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--text2),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Top 3</div><div class="kpi-value kv-green">12</div><div class="kpi-foot"><span class="kpi-tag kt-up">▲ 2 new</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--green),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Top 10</div><div class="kpi-value kv-blue">47</div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--blue),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Avg. Position</div><div class="kpi-value kv-gold">14.2</div><div class="kpi-foot"><span class="kpi-tag kt-up">▲ improved</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--gold),transparent)"></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="panel"><div class="panel-hd"><div class="panel-hd-title">Position Distribution</div></div><div class="panel-bd"><div class="chart-wrap"><canvas id="posDistChart"></canvas></div></div></div>
+      <div class="panel"><div class="panel-hd"><div class="panel-hd-title">Clicks + Impressions</div></div><div class="panel-bd"><div class="chart-wrap"><canvas id="kwTrendChart"></canvas></div></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd"><div class="panel-hd-title">All Keywords</div></div>
+      <div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Keyword</th><th>Position</th><th>Change</th><th>Trend</th><th>Clicks</th><th>Impressions</th><th>CTR</th></tr></thead><tbody id="kwBody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- BACKLINKS -->
+  <div id="page-backlinks" class="page">
+    <div class="ph"><div class="ph-eyebrow">Bing Webmaster API + Common Crawl</div><div class="ph-title">BACKLINK PROFILE</div><div class="ph-sub">Free data · no paid API required</div></div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">Total Backlinks</div><div class="kpi-value kv-plain">1.8k</div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--text2),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Referring Domains</div><div class="kpi-value kv-green">234</div><div class="kpi-foot"><span class="kpi-tag kt-up">▲ 12 new</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--green),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Domain Authority</div><div class="kpi-value kv-gold">42</div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--gold),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Toxic Links</div><div class="kpi-value kv-red">8</div><div class="kpi-foot"><span class="kpi-tag kt-down">Disavow</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--red),transparent)"></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="panel"><div class="panel-hd"><div class="panel-hd-title">Link Growth</div></div><div class="panel-bd"><div class="chart-wrap"><canvas id="blTrendChart"></canvas></div></div></div>
+      <div class="panel"><div class="panel-hd"><div class="panel-hd-title">Anchor Distribution</div></div><div class="panel-bd"><div class="chart-wrap"><canvas id="anchorChart"></canvas></div></div></div>
+    </div>
+    <div class="panel"><div class="panel-hd"><div class="panel-hd-title">Top Referring Domains</div></div><div class="panel-bd" id="blList"></div></div>
+  </div>
+
+  <!-- SPEED -->
+  <div id="page-speed" class="page">
+    <div class="ph ph-row">
+      <div><div class="ph-eyebrow">Google PageSpeed Insights API · Free</div><div class="ph-title">PAGE SPEED</div><div class="ph-sub">Real field data (CrUX) · Lighthouse audit</div></div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn" id="btnMob" onclick="switchDev('mobile')">Mobile</button>
+        <button class="btn btn-gold" id="btnDesk" onclick="switchDev('desktop')">Desktop</button>
+      </div>
+    </div>
+    <div class="vitals-grid">
+      <div class="vital"><div class="vital-name">LCP · Largest Contentful Paint</div><div class="vital-val vw" id="vlcp">2.8s</div><div class="vital-desc">Needs improvement · &lt;2.5s</div><div class="vital-bar vbw" style="width:65%"></div></div>
+      <div class="vital"><div class="vital-name">CLS · Cumulative Layout Shift</div><div class="vital-val vg" id="vcls">0.04</div><div class="vital-desc">Good · &lt;0.1</div><div class="vital-bar vbg" style="width:90%"></div></div>
+      <div class="vital"><div class="vital-name">FID · First Input Delay</div><div class="vital-val vg" id="vfid">48ms</div><div class="vital-desc">Good · &lt;100ms</div><div class="vital-bar vbg" style="width:85%"></div></div>
+      <div class="vital"><div class="vital-name">FCP · First Contentful Paint</div><div class="vital-val vw" id="vfcp">1.9s</div><div class="vital-desc">Needs improvement · &lt;1.8s</div><div class="vital-bar vbw" style="width:58%"></div></div>
+      <div class="vital"><div class="vital-name">TTFB · Time to First Byte</div><div class="vital-val vg" id="vttfb">320ms</div><div class="vital-desc">Good · &lt;800ms</div><div class="vital-bar vbg" style="width:88%"></div></div>
+      <div class="vital"><div class="vital-name">Speed Index</div><div class="vital-val vw" id="vsi">3.2s</div><div class="vital-desc">Needs improvement</div><div class="vital-bar vbw" style="width:55%"></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="panel"><div class="panel-hd"><div class="panel-hd-title">Lighthouse Scores</div></div><div class="panel-bd"><div class="chart-wrap"><canvas id="lighthouseChart"></canvas></div></div></div>
+      <div class="panel">
+        <div class="panel-hd"><div class="panel-hd-title">Speed Opportunities</div></div>
+        <div class="panel-bd" style="padding-top:6px;padding-bottom:6px;">
+          <div class="issue"><div class="sev-bar sc"></div><div class="issue-bd"><div class="issue-title">Eliminate render-blocking resources</div><div class="issue-desc">Potential saving: 1.2s</div></div><span class="issue-cnt ic-r">-1.2s</span></div>
+          <div class="issue"><div class="sev-bar sw"></div><div class="issue-bd"><div class="issue-title">Properly size images</div><div class="issue-desc">8 oversized · save ~0.8s</div></div><span class="issue-cnt ic-w">-0.8s</span></div>
+          <div class="issue"><div class="sev-bar sw"></div><div class="issue-bd"><div class="issue-title">Serve WebP / AVIF formats</div><div class="issue-desc">Replace PNG/JPEG · save ~0.5s</div></div><span class="issue-cnt ic-w">-0.5s</span></div>
+          <div class="issue"><div class="sev-bar si"></div><div class="issue-bd"><div class="issue-title">Enable gzip / brotli compression</div><div class="issue-desc">Server not compressing text assets</div></div></div>
+          <div class="issue"><div class="sev-bar si"></div><div class="issue-bd"><div class="issue-title">Improve cache policy TTL</div><div class="issue-desc">14 static assets with short cache</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ON-PAGE -->
+  <div id="page-onpage" class="page">
+    <div class="ph"><div class="ph-eyebrow">Crawler Analysis</div><div class="ph-title">ON-PAGE SEO</div><div class="ph-sub">Titles, meta descriptions, headings, alt text, schema</div></div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">Missing Titles</div><div class="kpi-value kv-red">2</div><div class="kpi-foot"><span class="kpi-tag kt-down">Critical</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--red),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Missing Meta</div><div class="kpi-value kv-red">14</div><div class="kpi-foot"><span class="kpi-tag kt-down">Critical</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--red),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Missing H1</div><div class="kpi-value kv-gold">4</div><div class="kpi-foot"><span class="kpi-tag kt-warn">Warning</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--gold),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Missing Alt Text</div><div class="kpi-value kv-gold">28</div><div class="kpi-foot"><span class="kpi-tag kt-warn">Warning</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--gold),transparent)"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd"><div class="panel-hd-title">On-Page Checklist</div></div>
+      <div class="panel-bd" style="padding-top:6px;padding-bottom:6px;">
+        <div class="issue"><div class="sev-bar sp"></div><div class="issue-bd"><div class="issue-title">Title tag — 30-60 characters</div><div class="issue-desc">126 / 142 passing · 2 missing, 14 too long</div></div><span class="issue-cnt ic-g">126 ✓</span></div>
+        <div class="issue"><div class="sev-bar sc"></div><div class="issue-bd"><div class="issue-title">Meta description — 50-160 characters</div><div class="issue-desc">14 pages missing entirely</div></div><span class="issue-cnt ic-r">128</span></div>
+        <div class="issue"><div class="sev-bar sw"></div><div class="issue-bd"><div class="issue-title">Single H1 per page</div><div class="issue-desc">4 missing, 3 pages have multiple H1s</div></div><span class="issue-cnt ic-w">135</span></div>
+        <div class="issue"><div class="sev-bar sp"></div><div class="issue-bd"><div class="issue-title">Canonical tag present</div><div class="issue-desc">133 / 142 pages have self-referencing canonical</div></div><span class="issue-cnt ic-g">133 ✓</span></div>
+        <div class="issue"><div class="sev-bar sw"></div><div class="issue-bd"><div class="issue-title">All images have alt text</div><div class="issue-desc">28 images across 18 pages missing alt</div></div><span class="issue-cnt ic-w">114</span></div>
+        <div class="issue"><div class="sev-bar sp"></div><div class="issue-bd"><div class="issue-title">Structured data / JSON-LD</div><div class="issue-desc">Found on 89 pages — Article, FAQ, Product</div></div><span class="issue-cnt ic-g">89 ✓</span></div>
+        <div class="issue"><div class="sev-bar si"></div><div class="issue-bd"><div class="issue-title">Open Graph tags</div><div class="issue-desc">12 pages missing OG title or description</div></div><span class="issue-cnt">130</span></div>
+        <div class="issue"><div class="sev-bar sp"></div><div class="issue-bd"><div class="issue-title">No accidental noindex pages</div><div class="issue-desc">All 142 pages have robots meta set correctly</div></div><span class="issue-cnt ic-g">142 ✓</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPETITORS -->
+  <div id="page-competitors" class="page">
+    <div class="ph"><div class="ph-eyebrow">Domain Intelligence</div><div class="ph-title">COMPETITOR ANALYSIS</div><div class="ph-sub">Traffic benchmarks · keyword gap · domain comparison</div></div>
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-hd"><div class="panel-hd-title">Domain Comparison</div></div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead><tr><th>Domain</th><th>Traffic</th><th>Keywords</th><th>Backlinks</th><th>DA</th><th>Health</th></tr></thead>
+          <tbody>
+            <tr style="background:rgba(201,168,76,0.04);">
+              <td style="font-weight:600;color:var(--gold2);">★ example.com</td>
+              <td>12,400</td><td>284</td><td>1,847</td>
+              <td><span class="rank r3">42</span></td><td><span class="rank r3">72</span></td>
+            </tr>
+            <tr><td style="color:var(--text2)">competitor-a.com</td><td>38,200</td><td>1,240</td><td>8,920</td><td><span class="rank r1">61</span></td><td><span class="rank r1">88</span></td></tr>
+            <tr><td style="color:var(--text2)">competitor-b.com</td><td>24,100</td><td>720</td><td>4,200</td><td><span class="rank r2">54</span></td><td><span class="rank r2">81</span></td></tr>
+            <tr><td style="color:var(--text2)">competitor-c.com</td><td>9,800</td><td>198</td><td>980</td><td><span class="rank r4">38</span></td><td><span class="rank r4">68</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-hd"><div class="panel-hd-title">Traffic Share</div></div>
+      <div class="panel-bd">
+        <div class="comp-row"><div class="comp-name" style="color:var(--gold2)"><strong>example.com</strong></div><div class="comp-track"><div class="comp-fill" style="width:32%;background:linear-gradient(90deg,var(--gold3),var(--gold2))"><span>12.4k</span></div></div><div class="comp-score" style="color:var(--gold2)">12k</div></div>
+        <div class="comp-row"><div class="comp-name" style="color:var(--text2)">competitor-a.com</div><div class="comp-track"><div class="comp-fill" style="width:100%;background:linear-gradient(90deg,rgba(58,154,92,0.6),rgba(58,154,92,0.4))"><span>38.2k</span></div></div><div class="comp-score">38k</div></div>
+        <div class="comp-row"><div class="comp-name" style="color:var(--text2)">competitor-b.com</div><div class="comp-track"><div class="comp-fill" style="width:63%;background:linear-gradient(90deg,rgba(64,112,192,0.6),rgba(64,112,192,0.4))"><span>24.1k</span></div></div><div class="comp-score">24k</div></div>
+        <div class="comp-row"><div class="comp-name" style="color:var(--text2)">competitor-c.com</div><div class="comp-track"><div class="comp-fill" style="width:26%;background:linear-gradient(90deg,rgba(80,80,94,0.5),rgba(80,80,94,0.3))"><span>9.8k</span></div></div><div class="comp-score">9.8k</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd"><div class="panel-hd-title">Keyword Gap — Opportunities</div></div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead><tr><th>Keyword</th><th>Volume</th><th>Your Pos</th><th>Best Competitor</th><th>Difficulty</th><th>Opportunity</th></tr></thead>
+          <tbody>
+            <tr><td>seo audit checklist</td><td>8,100</td><td style="color:#e07080">Not ranking</td><td><span class="rank r1">#3</span></td><td><span class="tag tag-w">Medium</span></td><td><span class="tag tag-p">High</span></td></tr>
+            <tr><td>website health check</td><td>6,600</td><td><span class="rank r4">#34</span></td><td><span class="rank r1">#5</span></td><td><span class="tag tag-w">Medium</span></td><td><span class="tag tag-p">High</span></td></tr>
+            <tr><td>page speed test free</td><td>22,000</td><td style="color:#e07080">Not ranking</td><td><span class="rank r2">#8</span></td><td><span class="tag tag-c">High</span></td><td><span class="tag tag-i">Medium</span></td></tr>
+            <tr><td>check broken links</td><td>4,400</td><td><span class="rank r4">#28</span></td><td><span class="rank r2">#6</span></td><td><span class="tag tag-p">Low</span></td><td><span class="tag tag-p">High</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CRAWL MAP -->
+  <div id="page-crawlmap" class="page">
+    <div class="ph"><div class="ph-eyebrow">Visual Analysis</div><div class="ph-title">CRAWL MAP</div><div class="ph-sub">All 142 crawled pages by status · hover to inspect</div></div>
+    <div class="panel">
+      <div class="panel-hd">
+        <div class="panel-hd-title">Page Status Heatmap</div>
+        <div style="display:flex;gap:16px;font-size:11px;font-weight:500;">
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:2px;background:rgba(58,154,92,0.7);box-shadow:0 0 4px rgba(58,154,92,0.4);display:inline-block;"></span>OK</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:2px;background:rgba(64,112,192,0.65);display:inline-block;"></span>Redirect</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:2px;background:rgba(201,168,76,0.65);display:inline-block;"></span>Warning</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:2px;background:rgba(201,64,80,0.7);display:inline-block;"></span>Error</span>
+        </div>
+      </div>
+      <div class="panel-bd"><div class="map-wrap" id="crawlMapGrid"></div><div style="font-size:11px;color:var(--text3);margin-top:12px;font-weight:300;">Hover any tile to inspect · each square = 1 page</div></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="page-settings" class="page">
+    <div class="ph"><div class="ph-eyebrow">Configuration</div><div class="ph-title">SETTINGS</div></div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-hd"><div class="panel-hd-title">API Keys</div></div>
+        <div class="panel-bd" style="display:flex;flex-direction:column;gap:16px;">
+          <div><div class="sett-lbl">Google PSI API Key</div><input class="sett-input" value="AIza••••••••••••••••••••" placeholder="AIza..."></div>
+          <div><div class="sett-lbl">Google OAuth Client ID</div><input class="sett-input" placeholder="xxx.apps.googleusercontent.com"></div>
+          <div><div class="sett-lbl">Bing Webmaster Key</div><input class="sett-input" placeholder="abc123..."></div>
+          <div><div class="sett-lbl">GA4 Property ID</div><input class="sett-input" placeholder="123456789"></div>
+          <button class="btn btn-gold" style="width:100%;height:38px;font-size:12px;border-radius:var(--r-sm);">Save API Keys</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd"><div class="panel-hd-title">Crawler Settings</div></div>
+        <div class="panel-bd" style="display:flex;flex-direction:column;gap:16px;">
+          <div><div class="sett-lbl">Max pages to crawl</div><input type="number" class="sett-input" value="500"></div>
+          <div><div class="sett-lbl">Crawl delay (ms)</div><input type="number" class="sett-input" value="500"></div>
+          <div><div class="sett-lbl">Max crawl depth</div><input type="number" class="sett-input" value="4"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,0.05);">
+            <span style="font-size:13px;">Crawl JS-rendered pages</span>
+            <span style="font-size:12px;color:#60d080;font-weight:600;">Enabled</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,0.05);">
+            <span style="font-size:13px;">Follow external links</span>
+            <span style="font-size:12px;color:var(--text3);font-weight:600;">Disabled</span>
+          </div>
+          <button class="btn btn-gold" style="width:100%;height:38px;font-size:12px;border-radius:var(--r-sm);">Save Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+</div>
+</div>
+
+<script>
+// Chart defaults
+Chart.defaults.color = '#50505e';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 11;
+var tt = { backgroundColor:'#1e1e28', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, padding:10, cornerRadius:8, titleColor:'#e8e4dc', bodyColor:'#9090a0' };
+var gr = { color:'rgba(255,255,255,0.04)', drawBorder:false };
+
+// Navigation
+function go(id, el) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  var p = document.getElementById('page-' + id);
+  if (p) p.classList.add('active');
+  if (el) el.classList.add('active');
+  else {
+    document.querySelectorAll('.nav-item').forEach(function(b){
+      var oc = b.getAttribute('onclick') || '';
+      if (oc.indexOf("'" + id + "'") !== -1) b.classList.add('active');
+    });
+  }
+  setTimeout(function(){ lazyCharts(id); }, 60);
+}
+
+// Traffic chart
+var trafficChart;
+var tLabels = ['Jan 1','Jan 8','Jan 15','Jan 22','Jan 29','Feb 5','Feb 12','Feb 19','Feb 26','Mar 5','Mar 12'];
+var tData   = [3200,3800,4100,3700,4400,4900,5200,4800,5600,5900,6800];
+
+function buildTraffic() {
+  var ctx = document.getElementById('trafficChart'); if (!ctx) return;
+  trafficChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: tLabels, datasets: [{
+      data: tData, fill: true, borderColor: '#c9a84c', borderWidth: 2,
+      backgroundColor: function(c) {
+        var g = c.chart.ctx.createLinearGradient(0,0,0,200);
+        g.addColorStop(0,'rgba(201,168,76,0.2)'); g.addColorStop(1,'rgba(201,168,76,0)'); return g;
+      },
+      tension: 0.4, pointRadius: 0, pointHoverRadius: 5, pointBackgroundColor: '#e8c97a'
+    }]},
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:tt}, scales:{x:{grid:gr},y:{grid:gr}} }
+  });
+}
+
+function updateTraffic(d) {
+  if (!trafficChart) return;
+  trafficChart.data.datasets[0].data = tData.map(function(v,i){ return Math.round(v * (1 + (i/24)*0.15)); });
+  trafficChart.update();
+}
+
+function buildIndexChart() {
+  var ctx = document.getElementById('indexChart'); if (!ctx) return;
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: { datasets:[{ data:[128,9,5], backgroundColor:['rgba(58,154,92,0.7)','rgba(201,168,76,0.65)','rgba(80,80,94,0.5)'], borderWidth:0, hoverOffset:4 }] },
+    options: { responsive:true, maintainAspectRatio:false, cutout:'74%', plugins:{legend:{display:false},tooltip:tt} }
+  });
+}
+
+function buildDeviceChart() {
+  var ctx = document.getElementById('deviceChart'); if (!ctx) return;
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels:['Mobile','Desktop','Tablet'], datasets:[{ data:[58,36,6], backgroundColor:['rgba(201,168,76,0.7)','rgba(64,112,192,0.6)','rgba(80,80,94,0.4)'], borderWidth:0, hoverOffset:4 }] },
+    options: { responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{legend:{display:true, position:'right', labels:{color:'#9090a0',boxWidth:8,padding:10,font:{size:11}}},tooltip:tt} }
+  });
+}
+
+// Keyword charts
+var kwBuilt = {};
+function buildKwCharts() {
+  if (!kwBuilt.pos) {
+    var c = document.getElementById('posDistChart'); if (c) {
+      new Chart(c, {
+        type:'bar',
+        data:{ labels:['#1-3','#4-10','#11-20','#21-50','#50+'], datasets:[{ data:[12,35,48,89,100],
+          backgroundColor:['rgba(58,154,92,0.7)','rgba(64,112,192,0.6)','rgba(201,168,76,0.6)','rgba(80,80,94,0.4)','rgba(50,50,60,0.4)'], borderRadius:4, borderWidth:0 }] },
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:tt}, scales:{x:{grid:gr},y:{grid:gr}} }
+      });
+      kwBuilt.pos = true;
+    }
+  }
+  if (!kwBuilt.trend) {
+    var c2 = document.getElementById('kwTrendChart'); if (c2) {
+      new Chart(c2, {
+        type:'line',
+        data:{ labels:['Oct','Nov','Dec','Jan','Feb','Mar'], datasets:[
+          { label:'Clicks', data:[3200,3800,4400,5200,5900,6800], borderColor:'#c9a84c', borderWidth:2, fill:false, tension:0.4, pointRadius:0 },
+          { label:'Impr/100', data:[420,480,520,600,680,780], borderColor:'rgba(64,112,192,0.6)', borderWidth:1.5, fill:false, tension:0.4, pointRadius:0, borderDash:[4,4] }
+        ]},
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:true, labels:{color:'#9090a0',boxWidth:8,padding:14}},tooltip:tt}, scales:{x:{grid:gr},y:{grid:gr}} }
+      });
+      kwBuilt.trend = true;
+    }
+  }
+}
+
+// Backlink charts
+var blBuilt = {};
+function buildBlCharts() {
+  if (!blBuilt.t) {
+    var c = document.getElementById('blTrendChart'); if (c) {
+      new Chart(c, {
+        type:'line',
+        data:{ labels:['Oct','Nov','Dec','Jan','Feb','Mar'], datasets:[{ data:[1200,1380,1520,1680,1780,1847], fill:true, borderColor:'#c9a84c', borderWidth:2,
+          backgroundColor:function(ct){ var g=ct.chart.ctx.createLinearGradient(0,0,0,180); g.addColorStop(0,'rgba(201,168,76,0.2)'); g.addColorStop(1,'rgba(201,168,76,0)'); return g; },
+          tension:0.4, pointRadius:0 }] },
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:tt}, scales:{x:{grid:gr},y:{grid:gr}} }
+      });
+      blBuilt.t = true;
+    }
+  }
+  if (!blBuilt.a) {
+    var c2 = document.getElementById('anchorChart'); if (c2) {
+      new Chart(c2, {
+        type:'doughnut',
+        data:{ labels:['Brand','Exact match','Partial','Generic','Naked URL'], datasets:[{ data:[38,22,18,14,8],
+          backgroundColor:['rgba(201,168,76,0.8)','rgba(201,168,76,0.55)','rgba(64,112,192,0.6)','rgba(80,80,94,0.4)','rgba(50,50,60,0.4)'], borderWidth:0, hoverOffset:4 }] },
+        options:{ responsive:true, maintainAspectRatio:false, cutout:'62%', plugins:{legend:{display:true, position:'right', labels:{color:'#9090a0',boxWidth:8,padding:10,font:{size:11}}},tooltip:tt} }
+      });
+      blBuilt.a = true;
+    }
+  }
+}
+
+// Lighthouse chart
+var lhBuilt = false;
+function buildLighthouse() {
+  if (lhBuilt) return;
+  var ctx = document.getElementById('lighthouseChart'); if (!ctx) return;
+  new Chart(ctx, {
+    type:'radar',
+    data:{ labels:['Performance','SEO','Accessibility','Best Practices','PWA'], datasets:[
+      { label:'Mobile',  data:[72,91,84,79,40], borderColor:'rgba(201,168,76,0.8)', backgroundColor:'rgba(201,168,76,0.08)', borderWidth:2, pointBackgroundColor:'#c9a84c' },
+      { label:'Desktop', data:[88,91,86,83,40], borderColor:'rgba(64,112,192,0.6)', backgroundColor:'rgba(64,112,192,0.06)', borderWidth:1.5, pointBackgroundColor:'#4070c0', borderDash:[4,4] }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:true, labels:{color:'#9090a0',boxWidth:8,padding:14}}, tooltip:tt },
+      scales:{ r:{ grid:{color:'rgba(255,255,255,0.05)'}, pointLabels:{color:'#9090a0',font:{size:11}}, ticks:{backdropColor:'transparent',color:'#30303c',stepSize:20}, min:0, max:100 } }
+    }
+  });
+  lhBuilt = true;
+}
+
+// Lazy charts
+function lazyCharts(id) {
+  if (id === 'keywords') buildKwCharts();
+  if (id === 'backlinks') buildBlCharts();
+  if (id === 'speed') buildLighthouse();
+  if (id === 'crawlmap') buildMap();
+}
+
+// Crawl table
+var crawlRows = [
+  { url:'/', s:'200', title:'Home · Meridian SEO', h1:true, meta:true, canon:true, n:0 },
+  { url:'/blog', s:'200', title:'Blog — SEO Tips', h1:true, meta:false, canon:true, n:1 },
+  { url:'/pricing', s:'301', title:null, h1:null, meta:null, canon:null, n:1 },
+  { url:'/old-page', s:'404', title:'Not Found', h1:false, meta:false, canon:false, n:3 },
+  { url:'/features', s:'200', title:'Features · All Tools', h1:true, meta:'short', canon:true, n:1 },
+  { url:'/about', s:'200', title:'About Us', h1:true, meta:false, canon:false, n:2 }
+];
+
+function bc(v) {
+  if (v === null) return '<span style="color:var(--text4)">—</span>';
+  if (v === true) return '<span style="color:#60d080">✓</span>';
+  if (v === false) return '<span style="color:#e07080">✗</span>';
+  return '<span style="color:var(--gold2)">~</span>';
+}
+
+function renderCrawl(f) {
+  var rows = (f === 'all') ? crawlRows : crawlRows.filter(function(r){ return r.s === f; });
+  var html = '';
+  rows.forEach(function(r) {
+    html += '<tr>';
+    html += '<td style="font-family:\'DM Mono\',monospace;font-size:11px;color:#70a0e0">' + r.url + '</td>';
+    html += '<td><span class="chip c' + r.s + '">' + r.s + '</span></td>';
+    html += '<td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (r.title || '<span style="color:var(--text4)">—</span>') + '</td>';
+    html += '<td>' + bc(r.h1) + '</td>';
+    html += '<td>' + bc(r.meta) + '</td>';
+    html += '<td>' + bc(r.canon) + '</td>';
+    html += '<td>' + (r.n > 0 ? '<span class="issue-cnt ' + (r.n > 1 ? 'ic-r' : 'ic-w') + '">' + r.n + '</span>' : '<span class="issue-cnt ic-g">0</span>') + '</td>';
+    html += '</tr>';
+  });
+  document.getElementById('crawlBody').innerHTML = html;
+  document.getElementById('crawlCount').textContent = 'Showing ' + rows.length + ' of 142 pages';
+}
+
+function filterCrawl() {
+  renderCrawl(document.getElementById('statusFilter').value);
+}
+
+// Keywords table
+var kwData = [
+  { kw:'seo audit tool', pos:2, ch:1, cl:1240, im:8200, ctr:'15.1%', sp:[2,3,2,2,2,2] },
+  { kw:'website seo checker', pos:7, ch:3, cl:890, im:7100, ctr:'12.5%', sp:[10,9,8,9,8,7] },
+  { kw:'free seo analyzer', pos:9, ch:0, cl:654, im:5400, ctr:'12.1%', sp:[9,9,10,9,9,9] },
+  { kw:'site audit software', pos:14, ch:-2, cl:312, im:3200, ctr:'9.8%', sp:[12,11,13,14,14,14] },
+  { kw:'technical seo check', pos:22, ch:5, cl:201, im:4100, ctr:'4.9%', sp:[27,26,24,23,22,22] },
+  { kw:'backlink checker', pos:31, ch:-1, cl:88, im:2900, ctr:'3.0%', sp:[28,30,31,31,31,31] },
+  { kw:'crawl website free', pos:18, ch:2, cl:144, im:2200, ctr:'6.5%', sp:[20,20,19,18,18,18] }
+];
+
+function sparkline(data) {
+  var mx = Math.max.apply(null, data), mn = Math.min.apply(null, data);
+  var html = '<span class="spark">';
+  data.forEach(function(v, i) {
+    var h = Math.round(4 + (1 - (v - mn) / (mx - mn || 1)) * 14);
+    var isImproving = data[data.length-1] <= data[0];
+    var col = isImproving ? 'rgba(58,154,92,0.7)' : 'rgba(64,112,192,0.5)';
+    html += '<span class="spark-b" style="height:' + h + 'px;background:' + col + '"></span>';
+  });
+  html += '</span>';
+  return html;
+}
+
+function renderKw() {
+  var b = document.getElementById('kwBody'); if (!b) return;
+  var html = '';
+  kwData.forEach(function(k) {
+    var rb = k.pos <= 3 ? 'r1' : k.pos <= 10 ? 'r2' : k.pos <= 20 ? 'r3' : 'r4';
+    var ch = k.ch > 0 ? '<span class="t-up">▲' + k.ch + '</span>' : k.ch < 0 ? '<span class="t-down">▼' + Math.abs(k.ch) + '</span>' : '<span class="t-flat">—</span>';
+    html += '<tr>';
+    html += '<td style="font-weight:500">' + k.kw + '</td>';
+    html += '<td><span class="rank ' + rb + '">#' + k.pos + '</span></td>';
+    html += '<td>' + ch + '</td>';
+    html += '<td>' + sparkline(k.sp) + '</td>';
+    html += '<td>' + k.cl.toLocaleString() + '</td>';
+    html += '<td>' + k.im.toLocaleString() + '</td>';
+    html += '<td style="font-family:\'DM Mono\',monospace">' + k.ctr + '</td>';
+    html += '</tr>';
+  });
+  b.innerHTML = html;
+}
+
+// Backlinks
+var blData = [
+  { d:'techcrunch.com', da:92, n:3, a:'seo tool', t:'dofollow' },
+  { d:'moz.com', da:88, n:1, a:'audit software', t:'dofollow' },
+  { d:'searchengineland.com', da:82, n:2, a:'seo checker', t:'dofollow' },
+  { d:'reddit.com', da:91, n:14, a:'various', t:'nofollow' },
+  { d:'wordpress.org', da:94, n:1, a:'seo plugin', t:'dofollow' }
+];
+
+function renderBL() {
+  var el = document.getElementById('blList'); if (!el) return;
+  var html = '';
+  blData.forEach(function(b) {
+    html += '<div class="bl-row">';
+    html += '<div class="bl-avatar">' + b.d[0].toUpperCase() + '</div>';
+    html += '<div style="flex:1"><div class="bl-domain">' + b.d + '</div>';
+    html += '<div class="bl-meta"><span>' + b.n + ' link' + (b.n > 1 ? 's' : '') + '</span><span>Anchor: "' + b.a + '"</span></div></div>';
+    html += '<div class="bl-da">' + b.da + '</div>';
+    html += '<span class="bl-type ' + (b.t === 'dofollow' ? 'bl-do' : 'bl-no') + '">' + b.t + '</span>';
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
+// Crawl map
+function buildMap() {
+  var el = document.getElementById('crawlMapGrid');
+  if (!el || el.children.length > 0) return;
+  var types = ['mn-ok','mn-ok','mn-ok','mn-ok','mn-ok','mn-ok','mn-ok','mn-ok','mn-ok','mn-ok','mn-rdir','mn-warn','mn-ok','mn-ok','mn-err'];
+  var urls = ['/','/','/blog','/pricing (redirect)','/old-page (404)','/features','/about','/contact','/docs','/api'];
+  var html = '';
+  for (var i = 0; i < 142; i++) {
+    var t = types[i % types.length];
+    var u = urls[i % urls.length];
+    html += '<div class="map-node ' + t + '" title="' + u + '"></div>';
+  }
+  el.innerHTML = html;
+}
+
+// Device toggle
+var devData = {
+  mobile:  { lcp:'2.8s', cls:'0.04', fid:'48ms', fcp:'1.9s', ttfb:'320ms', si:'3.2s' },
+  desktop: { lcp:'1.4s', cls:'0.02', fid:'18ms', fcp:'0.9s', ttfb:'180ms', si:'1.8s' }
+};
+function switchDev(d) {
+  var m = devData[d];
+  var keys = ['lcp','cls','fid','fcp','ttfb','si'];
+  keys.forEach(function(k) {
+    var el = document.getElementById('v' + k); if (el) el.textContent = m[k];
+  });
+  document.getElementById('btnMob').className  = 'btn' + (d === 'mobile'  ? ' btn-gold' : '');
+  document.getElementById('btnDesk').className = 'btn' + (d === 'desktop' ? ' btn-gold' : '');
+}
+
+// Scan overlay
+var scanSteps = [
+  'Fetching robots.txt and sitemap.xml',
+  'Launching Puppeteer headless browser',
+  'Crawling pages and parsing HTML',
+  'Extracting titles, meta, H1-H6 tags',
+  'Checking all links with HEAD requests',
+  'Calling Google PageSpeed Insights API',
+  'Fetching Search Console rankings',
+  'Pulling GA4 traffic analytics',
+  'Running SEO scoring engine'
+];
+
+function runAudit() {
+  var ov  = document.getElementById('scanOverlay');
+  var se  = document.getElementById('scanSteps');
+  var sm  = document.getElementById('scanMsg');
+  var sp  = document.getElementById('scanProg');
+  var html = '';
+  scanSteps.forEach(function(s) { html += '<div class="scan-step">' + s.toUpperCase() + '</div>'; });
+  se.innerHTML = html;
+  ov.classList.add('show');
+  var i = 0;
+  var t = setInterval(function() {
+    if (i < scanSteps.length) {
+      sm.textContent = scanSteps[i].toUpperCase() + '...';
+      se.children[i].classList.add('done');
+      sp.style.width = ((i + 1) / scanSteps.length * 100) + '%';
+      i++;
+    } else {
+      clearInterval(t);
+      setTimeout(function() { ov.classList.remove('show'); }, 600);
+    }
+  }, 400);
+}
+
+function doExportPDF() { alert('PDF export:\nIn production use jsPDF + html2canvas to capture all panels into a branded report.'); }
+function doExportCSV() {
+  var rows = [['URL','Status','Title','H1','Meta','Canonical','Issues']];
+  crawlRows.forEach(function(r) { rows.push([r.url, r.s, r.title || '', r.h1, r.meta, r.canon, r.n]); });
+  var csv = rows.map(function(r) { return r.join(','); }).join('\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv,' + encodeURIComponent(csv);
+  a.download = 'crawl-report.csv';
+  a.click();
+}
+
+// Init
+window.addEventListener('DOMContentLoaded', function() {
+  buildTraffic();
+  buildIndexChart();
+  buildDeviceChart();
+  renderCrawl('all');
+  renderKw();
+  renderBL();
+});
+</script>
+</body>
+</html>
