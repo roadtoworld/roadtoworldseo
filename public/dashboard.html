@@ -676,19 +676,19 @@ select.filt {
     </div>
     <div class="domain-pill" onclick="document.getElementById('urlInput').focus()">
       <div class="domain-dot"></div>
-      <div class="domain-txt" id="sidebarDomain">example.com</div>
+      <div class="domain-txt" id="sidebarDomain">enter a domain</div>
     </div>
   </div>
 
   <div class="nav-scroll">
     <div class="nav-group">
       <div class="nav-group-lbl">Overview</div>
-      <div class="nav-item active" onclick="go('overview',this)">Dashboard<span class="nav-badge nb-ok">72</span></div>
+      <div class="nav-item active" onclick="go('overview',this)">Dashboard<span class="nav-badge nb-dim" id="navHealthBadge">—</span></div>
     </div>
     <div class="nav-group">
       <div class="nav-group-lbl">Audit</div>
-      <div class="nav-item" onclick="go('technical',this)">Technical SEO<span class="nav-badge nb-red">7</span></div>
-      <div class="nav-item" onclick="go('onpage',this)">On-Page<span class="nav-badge nb-red">4</span></div>
+      <div class="nav-item" onclick="go('technical',this)">Technical SEO<span class="nav-badge nb-dim" id="navTechBadge">—</span></div>
+      <div class="nav-item" onclick="go('onpage',this)">On-Page<span class="nav-badge nb-dim" id="navOnpageBadge">—</span></div>
       <div class="nav-item" onclick="go('speed',this)">Page Speed<span class="nav-badge nb-dim">PSI</span></div>
     </div>
     <div class="nav-group">
@@ -731,7 +731,7 @@ select.filt {
   <div class="topbar">
     <div class="url-wrap">
       <span class="url-prefix">https://</span>
-      <input class="url-input" id="urlInput" placeholder="domain.com" value="example.com"
+      <input class="url-input" id="urlInput" placeholder="domain.com" value=""
         oninput="document.getElementById('sidebarDomain').textContent=this.value">
     </div>
     <button class="run-btn" onclick="runAudit()">Run Audit</button>
@@ -776,7 +776,7 @@ select.filt {
       <div class="kpi">
         <div class="kpi-label">Pages Indexed</div>
         <div class="kpi-value kv-green">—</div>
-        <div class="kpi-foot"><span class="kpi-tag kt-gray">From GSC</span></div>
+        <div class="kpi-foot"><span class="kpi-tag kt-gray">Needs GSC</span></div>
         <div class="kpi-bar" style="background:linear-gradient(90deg,var(--green),transparent)"></div>
       </div>
       <div class="kpi">
@@ -808,12 +808,10 @@ select.filt {
             <button class="btn" onclick="go('technical',null)">All →</button>
           </div>
           <div class="panel-bd" style="padding-top:6px;padding-bottom:6px;">
-            <div class="issue"><div class="sev-bar sc"></div><div class="issue-bd"><div class="issue-title">Missing meta descriptions</div><div class="issue-desc">14 pages — critical SERP CTR impact</div></div><span class="issue-cnt ic-r">14</span></div>
-            <div class="issue"><div class="sev-bar sc"></div><div class="issue-bd"><div class="issue-title">Duplicate title tags</div><div class="issue-desc">6 pages share identical titles</div></div><span class="issue-cnt ic-r">6</span></div>
-            <div class="issue"><div class="sev-bar sc"></div><div class="issue-bd"><div class="issue-title">Broken internal links (404)</div><div class="issue-desc">Wastes crawl budget</div></div><span class="issue-cnt ic-r">3</span></div>
-            <div class="issue"><div class="sev-bar sw"></div><div class="issue-bd"><div class="issue-title">Images missing alt text</div><div class="issue-desc">28 images across 18 pages</div></div><span class="issue-cnt ic-w">28</span></div>
-            <div class="issue"><div class="sev-bar sw"></div><div class="issue-bd"><div class="issue-title">Slow LCP on mobile (&gt;4s)</div><div class="issue-desc">3 pages failing Core Web Vitals</div></div><span class="issue-cnt ic-w">3</span></div>
-            <div class="issue"><div class="sev-bar si"></div><div class="issue-bd"><div class="issue-title">Missing canonical tags</div><div class="issue-desc">9 pages — low priority</div></div><span class="issue-cnt">9</span></div>
+            <div id="overviewIssues" style="padding:30px;text-align:center;color:var(--text3);">
+              <div style="font-size:24px;margin-bottom:8px;">🔍</div>
+              <div style="font-size:13px;">Run an audit to see real issues</div>
+            </div>
           </div>
         </div>
       </div>
@@ -838,17 +836,17 @@ select.filt {
                   style="filter:drop-shadow(0 0 8px rgba(201,168,76,0.5));transition:stroke-dashoffset 1.5s ease"/>
               </svg>
               <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:1px;background:linear-gradient(135deg,var(--gold2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;">72</div>
-                <div style="font-size:10px;color:var(--text3);letter-spacing:0.12em;text-transform:uppercase;font-weight:600;">Fair</div>
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:1px;background:linear-gradient(135deg,var(--gold2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;">—</div>
+                <div style="font-size:10px;color:var(--text3);letter-spacing:0.12em;text-transform:uppercase;font-weight:600;">—</div>
               </div>
             </div>
           </div>
           <div class="panel-bd" style="padding-top:6px;">
-            <div class="bar-row"><span class="bar-lbl">Technical</span><div class="bar-track"><div class="bar-fill" style="width:64%;background:linear-gradient(90deg,var(--gold3),var(--gold2));color:var(--gold)"></div></div><span class="bar-val">64</span></div>
-            <div class="bar-row"><span class="bar-lbl">On-Page</span><div class="bar-track"><div class="bar-fill" style="width:78%;background:linear-gradient(90deg,#2a7a40,#60d080);color:var(--green)"></div></div><span class="bar-val">78</span></div>
-            <div class="bar-row"><span class="bar-lbl">Page Speed</span><div class="bar-track"><div class="bar-fill" style="width:55%;background:linear-gradient(90deg,#902030,#e07080);color:var(--red)"></div></div><span class="bar-val">55</span></div>
-            <div class="bar-row"><span class="bar-lbl">Backlinks</span><div class="bar-track"><div class="bar-fill" style="width:82%;background:linear-gradient(90deg,#304090,#70a0e0);color:var(--blue)"></div></div><span class="bar-val">82</span></div>
-            <div class="bar-row"><span class="bar-lbl">Keywords</span><div class="bar-track"><div class="bar-fill" style="width:71%;background:linear-gradient(90deg,var(--bg5),rgba(255,255,255,0.3));color:var(--text2)"></div></div><span class="bar-val">71</span></div>
+            <div class="bar-row"><span class="bar-lbl">Technical</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:linear-gradient(90deg,var(--gold3),var(--gold2));color:var(--gold)"></div></div><span class="bar-val">—</span></div>
+            <div class="bar-row"><span class="bar-lbl">On-Page</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:linear-gradient(90deg,#2a7a40,#60d080);color:var(--green)"></div></div><span class="bar-val">—</span></div>
+            <div class="bar-row"><span class="bar-lbl">Page Speed</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:linear-gradient(90deg,#902030,#e07080);color:var(--red)"></div></div><span class="bar-val">—</span></div>
+            <div class="bar-row"><span class="bar-lbl">Backlinks</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:linear-gradient(90deg,#304090,#70a0e0);color:var(--blue)"></div></div><span class="bar-val">—</span></div>
+            <div class="bar-row"><span class="bar-lbl">Keywords</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:linear-gradient(90deg,var(--bg5),rgba(255,255,255,0.3));color:var(--text2)"></div></div><span class="bar-val">—</span></div>
           </div>
         </div>
         <div class="panel">
@@ -883,11 +881,7 @@ select.filt {
         <table class="tbl">
           <thead><tr><th>Keyword</th><th>Pos</th><th>Clicks</th></tr></thead>
           <tbody>
-            <tr><td>seo audit tool</td><td><span class="rank r1">#2</span></td><td>1,240</td></tr>
-            <tr><td>website seo checker</td><td><span class="rank r2">#7</span></td><td>890</td></tr>
-            <tr><td>free seo analyzer</td><td><span class="rank r2">#9</span></td><td>654</td></tr>
-            <tr><td>site audit software</td><td><span class="rank r3">#14</span></td><td>312</td></tr>
-            <tr><td>technical seo check</td><td><span class="rank r4">#22</span></td><td>201</td></tr>
+            <tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text3);">Connect GSC for real keywords</td></tr>
           </tbody>
         </table>
       </div>
@@ -896,9 +890,9 @@ select.filt {
         <div class="panel-bd">
           <div class="chart-wrap-sm"><canvas id="indexChart"></canvas></div>
           <div style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap;">
-            <span style="font-size:11px;display:flex;align-items:center;gap:5px;color:var(--text2);"><span style="width:8px;height:8px;background:rgba(58,154,92,0.7);box-shadow:0 0 6px rgba(58,154,92,0.4);display:inline-block;border-radius:2px;"></span>Indexed 128</span>
-            <span style="font-size:11px;display:flex;align-items:center;gap:5px;color:var(--text2);"><span style="width:8px;height:8px;background:rgba(201,168,76,0.6);display:inline-block;border-radius:2px;"></span>Excluded 9</span>
-            <span style="font-size:11px;display:flex;align-items:center;gap:5px;color:var(--text2);"><span style="width:8px;height:8px;background:rgba(80,80,94,0.6);display:inline-block;border-radius:2px;"></span>Blocked 5</span>
+            <span style="font-size:11px;display:flex;align-items:center;gap:5px;color:var(--text2);"><span style="width:8px;height:8px;background:rgba(58,154,92,0.7);box-shadow:0 0 6px rgba(58,154,92,0.4);display:inline-block;border-radius:2px;"></span>Indexed —</span>
+            <span style="font-size:11px;display:flex;align-items:center;gap:5px;color:var(--text2);"><span style="width:8px;height:8px;background:rgba(201,168,76,0.6);display:inline-block;border-radius:2px;"></span>Excluded —</span>
+            <span style="font-size:11px;display:flex;align-items:center;gap:5px;color:var(--text2);"><span style="width:8px;height:8px;background:rgba(80,80,94,0.6);display:inline-block;border-radius:2px;"></span>Blocked —</span>
           </div>
         </div>
       </div>
@@ -926,10 +920,14 @@ select.filt {
       </div>
     </div>
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-label">Crawled</div><div class="kpi-value kv-plain">142</div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--text2),transparent)"></div></div>
-      <div class="kpi"><div class="kpi-label">Broken 404</div><div class="kpi-value kv-red">3</div><div class="kpi-foot"><span class="kpi-tag kt-down">Critical</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--red),transparent)"></div></div>
-      <div class="kpi"><div class="kpi-label">Redirects</div><div class="kpi-value kv-blue">11</div><div class="kpi-foot"><span class="kpi-tag kt-warn">Review chains</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--blue),transparent)"></div></div>
-      <div class="kpi"><div class="kpi-label">Healthy 200</div><div class="kpi-value kv-green">128</div><div class="kpi-foot"><span class="kpi-tag kt-up">90%</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--green),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Crawled</div>
+      <div class="kpi-value kv-plain" id="techCrawled">—</div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--text2),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Broken 404</div>
+      <div class="kpi-value kv-red" id="tech404">—</div><div class="kpi-foot"><span class="kpi-tag kt-down">Critical</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--red),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Redirects</div>
+      <div class="kpi-value kv-blue" id="techRedirects">—</div><div class="kpi-foot"><span class="kpi-tag kt-warn">Review chains</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--blue),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Healthy 200</div>
+      <div class="kpi-value kv-green" id="tech200">—</div><div class="kpi-foot"><span class="kpi-tag kt-up">90%</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--green),transparent)"></div></div>
     </div>
     <div class="panel">
       <div class="panel-hd"><div><div class="panel-hd-title">Crawl Results</div><div class="panel-hd-sub" id="crawlCount">Showing 6 of 142 pages</div></div></div>
@@ -966,7 +964,7 @@ select.filt {
         <div style="font-size:12px;margin-bottom:16px;">Run an audit first, then connect Google Search Console for real rankings</div>
         <button class="btn btn-gold" onclick="connectGSC()" style="height:36px;padding:0 20px;">Connect Google Search Console</button>
       </div>
-      <div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Keyword</th><th>Position</th><th>Change</th><th>Trend</th><th>Clicks</th><th>Impressions</th><th>CTR</th></tr></thead><tbody id="kwBody"></tbody></table></div>
+      <div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Keyword</th><th>Position</th><th>Change</th><th>Trend</th><th>Clicks</th><th>Impressions</th><th>CTR</th></tr></thead><tbody id="kwBody"><tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3);">Run an audit to see keyword data</td></tr></tbody></table></div>
     </div>
   </div>
 
@@ -974,10 +972,14 @@ select.filt {
   <div id="page-backlinks" class="page">
     <div class="ph"><div class="ph-eyebrow">Bing Webmaster API + Common Crawl</div><div class="ph-title">BACKLINK PROFILE</div><div class="ph-sub">Free data · no paid API required</div></div>
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-label">Total Backlinks</div><div class="kpi-value kv-plain">1.8k</div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--text2),transparent)"></div></div>
-      <div class="kpi"><div class="kpi-label">Referring Domains</div><div class="kpi-value kv-green">234</div><div class="kpi-foot"><span class="kpi-tag kt-up">▲ 12 new</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--green),transparent)"></div></div>
-      <div class="kpi"><div class="kpi-label">Domain Authority</div><div class="kpi-value kv-gold">42</div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--gold),transparent)"></div></div>
-      <div class="kpi"><div class="kpi-label">Toxic Links</div><div class="kpi-value kv-red">8</div><div class="kpi-foot"><span class="kpi-tag kt-down">Disavow</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--red),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Total Backlinks</div>
+      <div class="kpi-value kv-plain">—</div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--text2),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Referring Domains</div>
+      <div class="kpi-value kv-green">—</div><div class="kpi-foot"><span class="kpi-tag kt-up">▲ 12 new</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--green),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Domain Authority</div>
+      <div class="kpi-value kv-gold">—</div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--gold),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Toxic Links</div>
+      <div class="kpi-value kv-red">—</div><div class="kpi-foot"><span class="kpi-tag kt-down">Disavow</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--red),transparent)"></div></div>
     </div>
     <div class="grid-2">
       <div class="panel"><div class="panel-hd"><div class="panel-hd-title">Link Growth</div></div><div class="panel-bd"><div class="chart-wrap"><canvas id="blTrendChart"></canvas></div></div></div>
@@ -1001,12 +1003,12 @@ select.filt {
       </div>
     </div>
     <div class="vitals-grid">
-      <div class="vital"><div class="vital-name">LCP · Largest Contentful Paint</div><div class="vital-val vw" id="vlcp">2.8s</div><div class="vital-desc">Needs improvement · &lt;2.5s</div><div class="vital-bar vbw" style="width:65%"></div></div>
-      <div class="vital"><div class="vital-name">CLS · Cumulative Layout Shift</div><div class="vital-val vg" id="vcls">0.04</div><div class="vital-desc">Good · &lt;0.1</div><div class="vital-bar vbg" style="width:90%"></div></div>
-      <div class="vital"><div class="vital-name">FID · First Input Delay</div><div class="vital-val vg" id="vfid">48ms</div><div class="vital-desc">Good · &lt;100ms</div><div class="vital-bar vbg" style="width:85%"></div></div>
-      <div class="vital"><div class="vital-name">FCP · First Contentful Paint</div><div class="vital-val vw" id="vfcp">1.9s</div><div class="vital-desc">Needs improvement · &lt;1.8s</div><div class="vital-bar vbw" style="width:58%"></div></div>
-      <div class="vital"><div class="vital-name">TTFB · Time to First Byte</div><div class="vital-val vg" id="vttfb">320ms</div><div class="vital-desc">Good · &lt;800ms</div><div class="vital-bar vbg" style="width:88%"></div></div>
-      <div class="vital"><div class="vital-name">Speed Index</div><div class="vital-val vw" id="vsi">3.2s</div><div class="vital-desc">Needs improvement</div><div class="vital-bar vbw" style="width:55%"></div></div>
+      <div class="vital"><div class="vital-name">LCP · Largest Contentful Paint</div><div class="vital-val vw" id="vlcp">—</div><div class="vital-desc">Needs improvement · &lt;2.5s</div><div class="vital-bar vbw" style="width:65%"></div></div>
+      <div class="vital"><div class="vital-name">CLS · Cumulative Layout Shift</div><div class="vital-val vg" id="vcls">—</div><div class="vital-desc">Good · &lt;0.1</div><div class="vital-bar vbg" style="width:90%"></div></div>
+      <div class="vital"><div class="vital-name">FID · First Input Delay</div><div class="vital-val vg" id="vfid">—</div><div class="vital-desc">Good · &lt;100ms</div><div class="vital-bar vbg" style="width:85%"></div></div>
+      <div class="vital"><div class="vital-name">FCP · First Contentful Paint</div><div class="vital-val vw" id="vfcp">—</div><div class="vital-desc">Needs improvement · &lt;1.8s</div><div class="vital-bar vbw" style="width:58%"></div></div>
+      <div class="vital"><div class="vital-name">TTFB · Time to First Byte</div><div class="vital-val vg" id="vttfb">—</div><div class="vital-desc">Good · &lt;800ms</div><div class="vital-bar vbg" style="width:88%"></div></div>
+      <div class="vital"><div class="vital-name">Speed Index</div><div class="vital-val vw" id="vsi">—</div><div class="vital-desc">Needs improvement</div><div class="vital-bar vbw" style="width:55%"></div></div>
     </div>
     <div class="grid-2">
       <div class="panel"><div class="panel-hd"><div class="panel-hd-title">Lighthouse Scores</div></div><div class="panel-bd"><div class="chart-wrap"><canvas id="lighthouseChart"></canvas></div></div></div>
@@ -1027,22 +1029,22 @@ select.filt {
   <div id="page-onpage" class="page">
     <div class="ph"><div class="ph-eyebrow">Crawler Analysis</div><div class="ph-title">ON-PAGE SEO</div><div class="ph-sub">Titles, meta descriptions, headings, alt text, schema</div></div>
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-label">Missing Titles</div><div class="kpi-value kv-red">2</div><div class="kpi-foot"><span class="kpi-tag kt-down">Critical</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--red),transparent)"></div></div>
-      <div class="kpi"><div class="kpi-label">Missing Meta</div><div class="kpi-value kv-red">14</div><div class="kpi-foot"><span class="kpi-tag kt-down">Critical</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--red),transparent)"></div></div>
-      <div class="kpi"><div class="kpi-label">Missing H1</div><div class="kpi-value kv-gold">4</div><div class="kpi-foot"><span class="kpi-tag kt-warn">Warning</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--gold),transparent)"></div></div>
-      <div class="kpi"><div class="kpi-label">Missing Alt Text</div><div class="kpi-value kv-gold">28</div><div class="kpi-foot"><span class="kpi-tag kt-warn">Warning</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--gold),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Missing Titles</div>
+      <div class="kpi-value kv-red" id="opTitles">—</div><div class="kpi-foot"><span class="kpi-tag kt-down">Critical</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--red),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Missing Meta</div>
+      <div class="kpi-value kv-red" id="opMeta">—</div><div class="kpi-foot"><span class="kpi-tag kt-down">Critical</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--red),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Missing H1</div>
+      <div class="kpi-value kv-gold" id="opH1">—</div><div class="kpi-foot"><span class="kpi-tag kt-warn">Warning</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--gold),transparent)"></div></div>
+      <div class="kpi"><div class="kpi-label">Missing Alt Text</div>
+      <div class="kpi-value kv-gold" id="opAlt">—</div><div class="kpi-foot"><span class="kpi-tag kt-warn">Warning</span></div><div class="kpi-bar" style="background:linear-gradient(90deg,var(--gold),transparent)"></div></div>
     </div>
     <div class="panel">
       <div class="panel-hd"><div class="panel-hd-title">On-Page Checklist</div></div>
       <div class="panel-bd" style="padding-top:6px;padding-bottom:6px;">
-        <div class="issue"><div class="sev-bar sp"></div><div class="issue-bd"><div class="issue-title">Title tag — 30-60 characters</div><div class="issue-desc">126 / 142 passing · 2 missing, 14 too long</div></div><span class="issue-cnt ic-g">126 ✓</span></div>
-        <div class="issue"><div class="sev-bar sc"></div><div class="issue-bd"><div class="issue-title">Meta description — 50-160 characters</div><div class="issue-desc">14 pages missing entirely</div></div><span class="issue-cnt ic-r">128</span></div>
-        <div class="issue"><div class="sev-bar sw"></div><div class="issue-bd"><div class="issue-title">Single H1 per page</div><div class="issue-desc">4 missing, 3 pages have multiple H1s</div></div><span class="issue-cnt ic-w">135</span></div>
-        <div class="issue"><div class="sev-bar sp"></div><div class="issue-bd"><div class="issue-title">Canonical tag present</div><div class="issue-desc">133 / 142 pages have self-referencing canonical</div></div><span class="issue-cnt ic-g">133 ✓</span></div>
-        <div class="issue"><div class="sev-bar sw"></div><div class="issue-bd"><div class="issue-title">All images have alt text</div><div class="issue-desc">28 images across 18 pages missing alt</div></div><span class="issue-cnt ic-w">114</span></div>
-        <div class="issue"><div class="sev-bar sp"></div><div class="issue-bd"><div class="issue-title">Structured data / JSON-LD</div><div class="issue-desc">Found on 89 pages — Article, FAQ, Product</div></div><span class="issue-cnt ic-g">89 ✓</span></div>
-        <div class="issue"><div class="sev-bar si"></div><div class="issue-bd"><div class="issue-title">Open Graph tags</div><div class="issue-desc">12 pages missing OG title or description</div></div><span class="issue-cnt">130</span></div>
-        <div class="issue"><div class="sev-bar sp"></div><div class="issue-bd"><div class="issue-title">No accidental noindex pages</div><div class="issue-desc">All 142 pages have robots meta set correctly</div></div><span class="issue-cnt ic-g">142 ✓</span></div>
+        <div id="onpageChecklist" style="padding:30px;text-align:center;color:var(--text3);">
+        <div style="font-size:24px;margin-bottom:8px;">📋</div>
+        <div style="font-size:13px;">Run an audit to see real on-page analysis</div>
+      </div>
       </div>
     </div>
   </div>
@@ -1056,14 +1058,7 @@ select.filt {
         <table class="tbl">
           <thead><tr><th>Domain</th><th>Traffic</th><th>Keywords</th><th>Backlinks</th><th>DA</th><th>Health</th></tr></thead>
           <tbody>
-            <tr style="background:rgba(201,168,76,0.04);">
-              <td style="font-weight:600;color:var(--gold2);">★ example.com</td>
-              <td>12,400</td><td>284</td><td>1,847</td>
-              <td><span class="rank r3">42</span></td><td><span class="rank r3">72</span></td>
-            </tr>
-            <tr><td style="color:var(--text2)">competitor-a.com</td><td>38,200</td><td>1,240</td><td>8,920</td><td><span class="rank r1">61</span></td><td><span class="rank r1">88</span></td></tr>
-            <tr><td style="color:var(--text2)">competitor-b.com</td><td>24,100</td><td>720</td><td>4,200</td><td><span class="rank r2">54</span></td><td><span class="rank r2">81</span></td></tr>
-            <tr><td style="color:var(--text2)">competitor-c.com</td><td>9,800</td><td>198</td><td>980</td><td><span class="rank r4">38</span></td><td><span class="rank r4">68</span></td></tr>
+            <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3);">Competitor analysis requires a paid API (Ahrefs/SEMrush)</td></tr>
           </tbody>
         </table>
       </div>
@@ -1071,7 +1066,7 @@ select.filt {
     <div class="panel" style="margin-bottom:16px;">
       <div class="panel-hd"><div class="panel-hd-title">Traffic Share</div></div>
       <div class="panel-bd">
-        <div class="comp-row"><div class="comp-name" style="color:var(--gold2)"><strong>example.com</strong></div><div class="comp-track"><div class="comp-fill" style="width:32%;background:linear-gradient(90deg,var(--gold3),var(--gold2))"><span>12.4k</span></div></div><div class="comp-score" style="color:var(--gold2)">12k</div></div>
+        <div class="comp-row"><div class="comp-name" style="color:var(--gold2)"><strong>enter a domain</strong></div><div class="comp-track"><div class="comp-fill" style="width:32%;background:linear-gradient(90deg,var(--gold3),var(--gold2))"><span>12.4k</span></div></div><div class="comp-score" style="color:var(--gold2)">12k</div></div>
         <div class="comp-row"><div class="comp-name" style="color:var(--text2)">competitor-a.com</div><div class="comp-track"><div class="comp-fill" style="width:100%;background:linear-gradient(90deg,rgba(58,154,92,0.6),rgba(58,154,92,0.4))"><span>38.2k</span></div></div><div class="comp-score">38k</div></div>
         <div class="comp-row"><div class="comp-name" style="color:var(--text2)">competitor-b.com</div><div class="comp-track"><div class="comp-fill" style="width:63%;background:linear-gradient(90deg,rgba(64,112,192,0.6),rgba(64,112,192,0.4))"><span>24.1k</span></div></div><div class="comp-score">24k</div></div>
         <div class="comp-row"><div class="comp-name" style="color:var(--text2)">competitor-c.com</div><div class="comp-track"><div class="comp-fill" style="width:26%;background:linear-gradient(90deg,rgba(80,80,94,0.5),rgba(80,80,94,0.3))"><span>9.8k</span></div></div><div class="comp-score">9.8k</div></div>
@@ -1229,8 +1224,29 @@ function updateDashboardKPIs(crawlData, psiData) {
   var total = critical + warnings;
 
   // Update Critical Issues KPI
-  var critKPI = document.querySelector('#page-overview .kpi:nth-child(2) .kpi-value');
-  if (critKPI) critKPI.textContent = critical;
+  // Update all KPI elements by ID
+  ['kpiHealth','healthScore'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=score; });
+  ['kpiCritical'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=critical; });
+  var sidebarScoreEl = document.getElementById('sidebarScore'); if(sidebarScoreEl) sidebarScoreEl.textContent=score;
+  var navBadge = document.getElementById('navHealthBadge'); if(navBadge) navBadge.textContent=score;
+  var navTech = document.getElementById('navTechBadge'); if(navTech) navTech.textContent=critical+warnings;
+  var kpiTag = document.getElementById('kpiHealthTag'); if(kpiTag) kpiTag.textContent = score>=80?'Good':score>=60?'Fair':'Poor';
+  var critTag = document.getElementById('kpiCriticalTag'); if(critTag) critTag.textContent = critical>0?critical+' critical':'None';
+  // Score breakdown bars
+  var bars = document.querySelectorAll('#page-overview .bar-fill');
+  var barVals = document.querySelectorAll('#page-overview .bar-val');
+  if(bars[2]) { bars[2].style.width=psiData.performance+'%'; }
+  if(barVals[2]) barVals[2].textContent=psiData.performance;
+  // Top issues
+  if(crawlData && crawlData.issues) {
+    var html='';
+    crawlData.issues.slice(0,6).forEach(function(issue){
+      var cls=issue.type==='critical'?'sc':issue.type==='warning'?'sw':'si';
+      var cnt=issue.type==='critical'?'ic-r':issue.type==='warning'?'ic-w':'';
+      html+='<div class="issue"><div class="sev-bar '+cls+'"></div><div class="issue-bd"><div class="issue-title">'+issue.msg+'</div><div class="issue-desc">'+crawlData.url+'</div></div>'+(cnt?'<span class="issue-cnt '+cnt+'">'+issue.type+'</span>':'')+'</div>';
+    });
+    var oi=document.getElementById('overviewIssues'); if(oi) oi.innerHTML=html;
+  }
 
   // Update SEO Health Score based on real issues
   var score = Math.max(0, Math.min(100, 100 - (critical * 15) - (warnings * 5)));
@@ -1314,11 +1330,13 @@ function updateTechnicalPage(data) {
 }
 function updateOnPage(data) {
   if (!data) return;
-  var kpis = document.querySelectorAll('#page-onpage .kpi-value');
-  if (kpis[0]) kpis[0].textContent = (!data.title) ? '1' : '0';
-  if (kpis[1]) kpis[1].textContent = (!data.metaDesc) ? '1' : '0';
-  if (kpis[2]) kpis[2].textContent = (data.h1s&&data.h1s.length===0) ? '1' : '0';
-  if (kpis[3]) kpis[3].textContent = data.imagesNoAlt||'0';
+  var opT=document.getElementById('opTitles'); if(opT) opT.textContent=(!data.title)?'1':'0';
+  var opM=document.getElementById('opMeta');   if(opM) opM.textContent=(!data.metaDesc)?'1':'0';
+  var opH=document.getElementById('opH1');     if(opH) opH.textContent=(data.h1s&&data.h1s.length===0)?'1':'0';
+  var opA=document.getElementById('opAlt');    if(opA) opA.textContent=data.imagesNoAlt||'0';
+  var navOp=document.getElementById('navOnpageBadge');
+  var opIssues=((!data.title)?1:0)+((!data.metaDesc)?1:0)+((data.h1s&&data.h1s.length===0)?1:0);
+  if(navOp) navOp.textContent=opIssues;
   if (data.issues && data.issues.length > 0) {
     var html = '';
     data.issues.forEach(function(issue) {
