@@ -908,7 +908,7 @@ select.filt {
   <!-- TECHNICAL -->
   <div id="page-technical" class="page">
     <div class="ph ph-row">
-      <div><div class="ph-eyebrow">Crawler Engine</div><div class="ph-title">TECHNICAL SEO</div><div class="ph-sub">142 pages · Puppeteer · 2.4s crawl time</div></div>
+      <div><div class="ph-eyebrow">Crawler Engine</div><div class="ph-title">TECHNICAL SEO</div><div class="ph-sub">Real crawler · single page analysis</div></div>
       <div style="display:flex;gap:8px;">
         <select class="filt" id="statusFilter" onchange="filterCrawl()">
           <option value="all">All statuses</option>
@@ -1066,10 +1066,10 @@ select.filt {
     <div class="panel" style="margin-bottom:16px;">
       <div class="panel-hd"><div class="panel-hd-title">Traffic Share</div></div>
       <div class="panel-bd">
-        <div class="comp-row"><div class="comp-name" style="color:var(--gold2)"><strong>enter a domain</strong></div><div class="comp-track"><div class="comp-fill" style="width:32%;background:linear-gradient(90deg,var(--gold3),var(--gold2))"><span>12.4k</span></div></div><div class="comp-score" style="color:var(--gold2)">12k</div></div>
-        <div class="comp-row"><div class="comp-name" style="color:var(--text2)">competitor-a.com</div><div class="comp-track"><div class="comp-fill" style="width:100%;background:linear-gradient(90deg,rgba(58,154,92,0.6),rgba(58,154,92,0.4))"><span>38.2k</span></div></div><div class="comp-score">38k</div></div>
-        <div class="comp-row"><div class="comp-name" style="color:var(--text2)">competitor-b.com</div><div class="comp-track"><div class="comp-fill" style="width:63%;background:linear-gradient(90deg,rgba(64,112,192,0.6),rgba(64,112,192,0.4))"><span>24.1k</span></div></div><div class="comp-score">24k</div></div>
-        <div class="comp-row"><div class="comp-name" style="color:var(--text2)">competitor-c.com</div><div class="comp-track"><div class="comp-fill" style="width:26%;background:linear-gradient(90deg,rgba(80,80,94,0.5),rgba(80,80,94,0.3))"><span>9.8k</span></div></div><div class="comp-score">9.8k</div></div>
+        <div class="comp-row"><div class="comp-name" style="color:var(--gold2)"><strong>enter a domain</strong></div><div class="comp-track"><div class="comp-fill" style="width:0%;background:linear-gradient(90deg,var(--gold3),var(--gold2))"><span>—</span></div></div><div class="comp-score" style="color:var(--gold2)">—</div></div>
+        <div class="comp-row"><div class="comp-name" style="color:var(--text2)">competitor-a.com</div><div class="comp-track"><div class="comp-fill" style="width:0%;background:linear-gradient(90deg,rgba(58,154,92,0.6),rgba(58,154,92,0.4))"><span>—</span></div></div><div class="comp-score">—</div></div>
+        <div class="comp-row"><div class="comp-name" style="color:var(--text2)">competitor-b.com</div><div class="comp-track"><div class="comp-fill" style="width:0%;background:linear-gradient(90deg,rgba(64,112,192,0.6),rgba(64,112,192,0.4))"><span>—</span></div></div><div class="comp-score">—</div></div>
+        <div class="comp-row"><div class="comp-name" style="color:var(--text2)">competitor-c.com</div><div class="comp-track"><div class="comp-fill" style="width:0%;background:linear-gradient(90deg,rgba(80,80,94,0.5),rgba(80,80,94,0.3))"><span>—</span></div></div><div class="comp-score">—</div></div>
       </div>
     </div>
     <div class="panel">
@@ -1206,6 +1206,7 @@ var currentDev = 'mobile';
 <script>
 
 function updateDashboardKPIs(crawlData, psiData) {
+  var opIssues = crawlData && crawlData.issues ? crawlData.issues.filter(function(i){return i.type==="critical"||i.type==="warning";}).length : 0;
   if (!crawlData && !psiData) return;
 
   // Update PSI speed score in score breakdown bar
@@ -1237,6 +1238,13 @@ function updateDashboardKPIs(crawlData, psiData) {
   var barVals = document.querySelectorAll('#page-overview .bar-val');
   if(bars[2]) { bars[2].style.width=psiData.performance+'%'; }
   if(barVals[2]) barVals[2].textContent=psiData.performance;
+  // Technical score from crawl issues
+  var techScore = Math.max(0, 100 - (critical*15) - (warnings*5));
+  var onpageScore = Math.max(0, 100 - (opIssues*20));
+  if(bars[0]) bars[0].style.width=techScore+'%';
+  if(barVals[0]) barVals[0].textContent=techScore;
+  if(bars[1]) bars[1].style.width=onpageScore+'%';
+  if(barVals[1]) barVals[1].textContent=onpageScore;
   // Top issues
   if(crawlData && crawlData.issues) {
     var html='';
@@ -1310,6 +1318,15 @@ function updateTechnicalPage(data) {
   if (!data) return;
   var issueCount = data.issues ? data.issues.filter(function(i){ return i.type==='critical'; }).length : 0;
   var warnCount  = data.issues ? data.issues.filter(function(i){ return i.type==='warning'; }).length : 0;
+  // Update technical KPIs
+  var techCrawled = document.getElementById('techCrawled');
+  var tech404 = document.getElementById('tech404');
+  var techRedir = document.getElementById('techRedirects');
+  var tech200 = document.getElementById('tech200');
+  if(techCrawled) techCrawled.textContent = '1';
+  if(tech404) tech404.textContent = data.status === 404 ? '1' : '0';
+  if(techRedir) techRedir.textContent = (data.status === 301 || data.status === 302) ? '1' : '0';
+  if(tech200) tech200.textContent = data.status === 200 ? '1' : '0';
   var tbody = document.getElementById('crawlBody');
   if (tbody) {
     var h1ok = data.h1s && data.h1s.length > 0;
@@ -1520,8 +1537,8 @@ function go(id, el) {
 
 // Traffic chart
 var trafficChart;
-var tLabels = ['Jan 1','Jan 8','Jan 15','Jan 22','Jan 29','Feb 5','Feb 12','Feb 19','Feb 26','Mar 5','Mar 12'];
-var tData   = [3200,3800,4100,3700,4400,4900,5200,4800,5600,5900,6800];
+var tLabels = ['No data'];
+var tData   = [0];
 
 function buildTraffic() {
   var ctx = document.getElementById('trafficChart'); if (!ctx) return;
@@ -1570,7 +1587,7 @@ function buildKwCharts() {
     var c = document.getElementById('posDistChart'); if (c) {
       new Chart(c, {
         type:'bar',
-        data:{ labels:['#1-3','#4-10','#11-20','#21-50','#50+'], datasets:[{ data:[12,35,48,89,100],
+        data:{ labels:['#1-3','#4-10','#11-20','#21-50','#50+'], datasets:[{ data:[0,0,0,0,0],
           backgroundColor:['rgba(58,154,92,0.7)','rgba(64,112,192,0.6)','rgba(201,168,76,0.6)','rgba(80,80,94,0.4)','rgba(50,50,60,0.4)'], borderRadius:4, borderWidth:0 }] },
         options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:tt}, scales:{x:{grid:gr},y:{grid:gr}} }
       });
@@ -1582,8 +1599,8 @@ function buildKwCharts() {
       new Chart(c2, {
         type:'line',
         data:{ labels:['Oct','Nov','Dec','Jan','Feb','Mar'], datasets:[
-          { label:'Clicks', data:[3200,3800,4400,5200,5900,6800], borderColor:'#c9a84c', borderWidth:2, fill:false, tension:0.4, pointRadius:0 },
-          { label:'Impr/100', data:[420,480,520,600,680,780], borderColor:'rgba(64,112,192,0.6)', borderWidth:1.5, fill:false, tension:0.4, pointRadius:0, borderDash:[4,4] }
+          { label:'Clicks', data:[0,0,0,0,0,0], borderColor:'#c9a84c', borderWidth:2, fill:false, tension:0.4, pointRadius:0 },
+          { label:'Impr/100', data:[0,0,0,0,0,0], borderColor:'rgba(64,112,192,0.6)', borderWidth:1.5, fill:false, tension:0.4, pointRadius:0, borderDash:[4,4] }
         ]},
         options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:true, labels:{color:'#9090a0',boxWidth:8,padding:14}},tooltip:tt}, scales:{x:{grid:gr},y:{grid:gr}} }
       });
@@ -1599,7 +1616,7 @@ function buildBlCharts() {
     var c = document.getElementById('blTrendChart'); if (c) {
       new Chart(c, {
         type:'line',
-        data:{ labels:['Oct','Nov','Dec','Jan','Feb','Mar'], datasets:[{ data:[1200,1380,1520,1680,1780,1847], fill:true, borderColor:'#c9a84c', borderWidth:2,
+        data:{ labels:['Oct','Nov','Dec','Jan','Feb','Mar'], datasets:[{ data:[0,0,0,0,0,0], fill:true, borderColor:'#c9a84c', borderWidth:2,
           backgroundColor:function(ct){ var g=ct.chart.ctx.createLinearGradient(0,0,0,180); g.addColorStop(0,'rgba(201,168,76,0.2)'); g.addColorStop(1,'rgba(201,168,76,0)'); return g; },
           tension:0.4, pointRadius:0 }] },
         options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:tt}, scales:{x:{grid:gr},y:{grid:gr}} }
@@ -1611,7 +1628,7 @@ function buildBlCharts() {
     var c2 = document.getElementById('anchorChart'); if (c2) {
       new Chart(c2, {
         type:'doughnut',
-        data:{ labels:['Brand','Exact match','Partial','Generic','Naked URL'], datasets:[{ data:[38,22,18,14,8],
+        data:{ labels:['Brand','Exact match','Partial','Generic','Naked URL'], datasets:[{ data:[1,1,1,1,1],
           backgroundColor:['rgba(201,168,76,0.8)','rgba(201,168,76,0.55)','rgba(64,112,192,0.6)','rgba(80,80,94,0.4)','rgba(50,50,60,0.4)'], borderWidth:0, hoverOffset:4 }] },
         options:{ responsive:true, maintainAspectRatio:false, cutout:'62%', plugins:{legend:{display:true, position:'right', labels:{color:'#9090a0',boxWidth:8,padding:10,font:{size:11}}},tooltip:tt} }
       });
