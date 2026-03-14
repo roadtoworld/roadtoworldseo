@@ -1139,88 +1139,6 @@ select.filt {
 
 
 <script>
-// ── REAL CRAWLER ──────────────────────────────────────────
-async function fetchCrawl(url) {
-  var fullUrl = url.startsWith('http') ? url : 'https://' + url;
-  var res = await fetch('/api/crawl?url=' + encodeURIComponent(fullUrl));
-  var data = await res.json();
-  if (data.error) throw new Error(data.error);
-  return data;
-}
-
-function updateTechnicalPage(data) {
-  if (!data) return;
-
-  // Update KPIs
-  var issueCount = data.issues ? data.issues.filter(function(i){ return i.type === 'critical'; }).length : 0;
-  var warnCount  = data.issues ? data.issues.filter(function(i){ return i.type === 'warning'; }).length : 0;
-
-  // Update crawl table with real data
-  var tbody = document.getElementById('crawlBody');
-  if (tbody) {
-    var row = '<tr>';
-    row += '<td style="font-family:'DM Mono',monospace;font-size:11px;color:#70a0e0">' + (data.url || '/') + '</td>';
-    row += '<td><span class="chip c' + data.status + '">' + data.status + '</span></td>';
-    row += '<td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (data.title || '<span style="color:var(--text4)">—</span>') + '</td>';
-    row += '<td>' + (data.h1s && data.h1s.length > 0 ? '<span style="color:#60d080">✓</span>' : '<span style="color:#e07080">✗</span>') + '</td>';
-    row += '<td>' + (data.metaDesc ? '<span style="color:#60d080">✓</span>' : '<span style="color:#e07080">✗</span>') + '</td>';
-    row += '<td>' + (data.canonical ? '<span style="color:#60d080">✓</span>' : '<span style="color:#e07080">✗</span>') + '</td>';
-    row += '<td><span class="issue-cnt ' + (issueCount > 0 ? 'ic-r' : warnCount > 0 ? 'ic-w' : 'ic-g') + '">' + (issueCount + warnCount || 0) + '</span></td>';
-    row += '</tr>';
-    tbody.innerHTML = row;
-    var countEl = document.getElementById('crawlCount');
-    if (countEl) countEl.textContent = 'Real data for: ' + data.url;
-  }
-
-  // Update On-Page checklist
-  updateOnPage(data);
-
-  // Update overview KPIs
-  var critEl = document.querySelector('#page-overview .kpi:nth-child(2) .kpi-value');
-  if (critEl) critEl.textContent = issueCount;
-}
-
-function updateOnPage(data) {
-  if (!data) return;
-  // Update On-Page KPIs
-  var kpis = document.querySelectorAll('#page-onpage .kpi-value');
-  if (kpis[0]) kpis[0].textContent = (!data.title) ? '1' : '0';
-  if (kpis[1]) kpis[1].textContent = (!data.metaDesc) ? '1' : '0';
-  if (kpis[2]) kpis[2].textContent = (data.h1s && data.h1s.length === 0) ? '1' : '0';
-  if (kpis[3]) kpis[3].textContent = data.imagesNoAlt || '0';
-
-  // Build real issues list
-  if (data.issues && data.issues.length > 0) {
-    var html = '';
-    data.issues.forEach(function(issue) {
-      var cls = issue.type === 'critical' ? 'sc' : issue.type === 'warning' ? 'sw' : 'si';
-      var cnt = issue.type === 'critical' ? 'ic-r' : issue.type === 'warning' ? 'ic-w' : '';
-      html += '<div class="issue"><div class="sev-bar ' + cls + '"></div>';
-      html += '<div class="issue-bd"><div class="issue-title">' + issue.msg + '</div></div>';
-      if (cnt) html += '<span class="issue-cnt ' + cnt + '">' + issue.type + '</span>';
-      html += '</div>';
-    });
-
-    // Also show good stuff
-    if (data.title) html += '<div class="issue"><div class="sev-bar sp"></div><div class="issue-bd"><div class="issue-title">Title tag present</div><div class="issue-desc">' + data.title.substring(0,60) + ' (' + data.titleLength + ' chars)</div></div><span class="issue-cnt ic-g">✓</span></div>';
-    if (data.canonical) html += '<div class="issue"><div class="sev-bar sp"></div><div class="issue-bd"><div class="issue-title">Canonical tag present</div><div class="issue-desc">' + data.canonical.substring(0,50) + '</div></div><span class="issue-cnt ic-g">✓</span></div>';
-    if (data.hasSchema) html += '<div class="issue"><div class="sev-bar sp"></div><div class="issue-bd"><div class="issue-title">Structured data found (JSON-LD)</div></div><span class="issue-cnt ic-g">✓</span></div>';
-    if (data.hasViewport) html += '<div class="issue"><div class="sev-bar sp"></div><div class="issue-bd"><div class="issue-title">Viewport meta tag present</div></div><span class="issue-cnt ic-g">✓</span></div>';
-
-    var onpagePanel = document.querySelector('#page-onpage .panel .panel-bd');
-    if (onpagePanel) onpagePanel.innerHTML = html;
-  }
-
-  // Update overview subtitle with real data
-  var sub = document.querySelector('#page-overview .ph-sub');
-  if (sub && data.url) {
-    var domain = data.url.replace('https://','').replace('http://','').split('/')[0];
-    sub.textContent = domain + ' · ' + data.totalLinks + ' links · PSI + Crawler · Updated just now';
-  }
-}
-// ── END CRAWLER ────────────────────────────────────────────
-</script>
-<script>
 async function fetchPSI(url, strategy) {
   var fullUrl = url.startsWith('http') ? url : 'https://' + url;
   var res = await fetch('/api/psi?url=' + encodeURIComponent(fullUrl) + '&strategy=' + (strategy||'mobile'));
@@ -1277,6 +1195,66 @@ function updateOverviewVitals(p) {
   if(vals[2]) vals[2].textContent=p.fid;
 }
 var currentDev = 'mobile';
+</script>
+<script>
+async function fetchCrawl(url) {
+  var fullUrl = url.startsWith('http') ? url : 'https://' + url;
+  var res = await fetch('/api/crawl?url=' + encodeURIComponent(fullUrl));
+  var data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data;
+}
+function updateTechnicalPage(data) {
+  if (!data) return;
+  var issueCount = data.issues ? data.issues.filter(function(i){ return i.type==='critical'; }).length : 0;
+  var warnCount  = data.issues ? data.issues.filter(function(i){ return i.type==='warning'; }).length : 0;
+  var tbody = document.getElementById('crawlBody');
+  if (tbody) {
+    var h1ok = data.h1s && data.h1s.length > 0;
+    var row = '<tr>';
+    row += '<td style="font-family:monospace;font-size:11px;color:#70a0e0">' + (data.url||'/') + '</td>';
+    row += '<td><span class="chip c' + data.status + '">' + data.status + '</span></td>';
+    row += '<td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (data.title||'<span style="color:#30303c">No title</span>') + '</td>';
+    row += '<td>' + (h1ok ? '<span style="color:#60d080">+</span>' : '<span style="color:#e07080">x</span>') + '</td>';
+    row += '<td>' + (data.metaDesc ? '<span style="color:#60d080">+</span>' : '<span style="color:#e07080">x</span>') + '</td>';
+    row += '<td>' + (data.canonical ? '<span style="color:#60d080">+</span>' : '<span style="color:#e07080">x</span>') + '</td>';
+    row += '<td><span class="issue-cnt ' + (issueCount>0?'ic-r':warnCount>0?'ic-w':'ic-g') + '">' + (issueCount+warnCount) + '</span></td>';
+    row += '</tr>';
+    tbody.innerHTML = row;
+    var cel = document.getElementById('crawlCount');
+    if (cel) cel.textContent = 'Real data: ' + data.url;
+  }
+  updateOnPage(data);
+}
+function updateOnPage(data) {
+  if (!data) return;
+  var kpis = document.querySelectorAll('#page-onpage .kpi-value');
+  if (kpis[0]) kpis[0].textContent = (!data.title) ? '1' : '0';
+  if (kpis[1]) kpis[1].textContent = (!data.metaDesc) ? '1' : '0';
+  if (kpis[2]) kpis[2].textContent = (data.h1s&&data.h1s.length===0) ? '1' : '0';
+  if (kpis[3]) kpis[3].textContent = data.imagesNoAlt||'0';
+  if (data.issues && data.issues.length > 0) {
+    var html = '';
+    data.issues.forEach(function(issue) {
+      var cls = issue.type==='critical'?'sc':issue.type==='warning'?'sw':'si';
+      var cnt = issue.type==='critical'?'ic-r':issue.type==='warning'?'ic-w':'';
+      html += '<div class="issue"><div class="sev-bar '+cls+'"></div>';
+      html += '<div class="issue-bd"><div class="issue-title">'+issue.msg+'</div></div>';
+      if (cnt) html += '<span class="issue-cnt '+cnt+'">'+issue.type+'</span>';
+      html += '</div>';
+    });
+    if (data.title) html += '<div class="issue"><div class="sev-bar sp"></div><div class="issue-bd"><div class="issue-title">Title present</div><div class="issue-desc">'+data.title.substring(0,60)+' ('+data.titleLength+' chars)</div></div><span class="issue-cnt ic-g">OK</span></div>';
+    if (data.canonical) html += '<div class="issue"><div class="sev-bar sp"></div><div class="issue-bd"><div class="issue-title">Canonical tag present</div></div><span class="issue-cnt ic-g">OK</span></div>';
+    if (data.hasSchema) html += '<div class="issue"><div class="sev-bar sp"></div><div class="issue-bd"><div class="issue-title">Structured data (JSON-LD) found</div></div><span class="issue-cnt ic-g">OK</span></div>';
+    var panel = document.querySelector('#page-onpage .panel .panel-bd');
+    if (panel) panel.innerHTML = html;
+  }
+  var sub = document.querySelector('#page-overview .ph-sub');
+  if (sub && data.url) {
+    var domain = data.url.replace('https://','').replace('http://','').split('/')[0];
+    sub.textContent = domain + ' · ' + data.totalLinks + ' links found · PSI + Crawler · Updated just now';
+  }
+}
 </script>
 <script>
 // Chart defaults
