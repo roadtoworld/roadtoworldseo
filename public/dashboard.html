@@ -121,6 +121,65 @@ function updateOverviewVitals(p) {
 }
 var currentDev = 'mobile';
 
+
+async function fetchPSI(url, strategy) {
+  var fullUrl = url.startsWith('http') ? url : 'https://' + url;
+  var res = await fetch('/api/psi?url=' + encodeURIComponent(fullUrl) + '&strategy=' + (strategy||'mobile'));
+  var data = await res.json();
+  if (data.error) throw new Error(JSON.stringify(data.error));
+  return data;
+}
+function parsePSI(data) {
+  if (!data || !data.lighthouseResult) return null;
+  var lhr = data.lighthouseResult;
+  var cats = lhr.categories; var aud = lhr.audits;
+  return {
+    performance:   Math.round((cats.performance&&cats.performance.score||0)*100),
+    seo:           Math.round((cats.seo&&cats.seo.score||0)*100),
+    accessibility: Math.round((cats.accessibility&&cats.accessibility.score||0)*100),
+    bestPractices: Math.round((cats['best-practices']&&cats['best-practices'].score||0)*100),
+    lcp:  (aud['largest-contentful-paint']&&aud['largest-contentful-paint'].displayValue)||'—',
+    cls:  (aud['cumulative-layout-shift']&&aud['cumulative-layout-shift'].displayValue)||'—',
+    fid:  (aud['max-potential-fid']&&aud['max-potential-fid'].displayValue)||'—',
+    fcp:  (aud['first-contentful-paint']&&aud['first-contentful-paint'].displayValue)||'—',
+    ttfb: (aud['server-response-time']&&aud['server-response-time'].displayValue)||'—',
+    si:   (aud['speed-index']&&aud['speed-index'].displayValue)||'—',
+    opportunities: Object.values(aud).filter(function(a){
+      return a.details&&a.details.type==='opportunity'&&a.numericValue>0;
+    }).sort(function(a,b){return b.numericValue-a.numericValue;}).slice(0,5)
+  };
+}
+function updateSpeedPage(p, strategy) {
+  if (!p) return;
+  ['lcp','cls','fid','fcp','ttfb','si'].forEach(function(k){
+    var el=document.getElementById('v'+k); if(el) el.textContent=p[k];
+  });
+  if (window._lhChart) {
+    var ds = strategy==='mobile'?0:1;
+    window._lhChart.data.datasets[ds].data=[p.performance,p.seo,p.accessibility,p.bestPractices,40];
+    window._lhChart.update();
+  }
+  if (p.opportunities&&p.opportunities.length) {
+    var html='';
+    p.opportunities.forEach(function(o){
+      var sv=o.displayValue||'';
+      var cl=o.score===0?'sc':'sw'; var ct=o.score===0?'ic-r':'ic-w';
+      html+='<div class="issue"><div class="sev-bar '+cl+'"></div><div class="issue-bd"><div class="issue-title">'+o.title+'</div><div class="issue-desc">'+(o.description||'').split('.')[0]+'</div></div>'+(sv?'<span class="issue-cnt '+ct+'">'+sv+'</span>':'')+'</div>';
+    });
+    var oppEl=document.querySelector('#page-speed .panel:last-child .panel-bd');
+    if(oppEl) oppEl.innerHTML=html;
+  }
+  document.getElementById('sidebarDomain').textContent=document.getElementById('urlInput').value||'example.com';
+}
+function updateOverviewVitals(p) {
+  if (!p) return;
+  var vals=document.querySelectorAll('#page-overview .vital-val');
+  if(vals[0]) vals[0].textContent=p.lcp;
+  if(vals[1]) vals[1].textContent=p.cls;
+  if(vals[2]) vals[2].textContent=p.fid;
+}
+var currentDev = 'mobile';
+
 </script>
 <style>
 :root {
