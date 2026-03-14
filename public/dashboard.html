@@ -740,6 +740,7 @@ select.filt {
       <div class="tb-chip" onclick="go('keywords',null)">284 keywords</div>
       <div class="tb-chip" onclick="doExportCSV()">↓ CSV</div>
       <div class="tb-chip" onclick="doExportPDF()">↓ PDF</div>
+      <button id="gscBtn" class="tb-chip" onclick="connectGSC()" style="cursor:pointer;background:linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.08));border-color:rgba(201,168,76,0.3);color:var(--gold2);">Connect GSC</button>
     </div>
   </div>
 
@@ -1322,6 +1323,140 @@ function updateOnPage(data) {
   }
 }
 </script>
+
+<script>
+// ── GOOGLE SEARCH CONSOLE ─────────────────────────────────
+var gscToken = null;
+
+function initGSC() {
+  var params = new URLSearchParams(window.location.search);
+  var token = params.get('access_token');
+  if (token) {
+    gscToken = token;
+    localStorage.setItem('gsc_token', token);
+    window.history.replaceState({}, '', '/');
+    showGSCConnected();
+  } else {
+    var stored = localStorage.getItem('gsc_token');
+    if (stored) { gscToken = stored; showGSCConnected(); }
+  }
+}
+
+function connectGSC() {
+  var clientId = '__GSC_CLIENT_ID__';
+  var redirect = 'https://roadtoworldseo.vercel.app/api/auth/callback';
+  var scope = 'https://www.googleapis.com/auth/webmasters.readonly';
+  var url = 'https://accounts.google.com/o/oauth2/v2/auth'
+    + '?client_id=' + clientId
+    + '&redirect_uri=' + encodeURIComponent(redirect)
+    + '&response_type=code'
+    + '&scope=' + encodeURIComponent(scope)
+    + '&access_type=offline&prompt=consent';
+  window.location.href = url;
+}
+
+function showGSCConnected() {
+  var btn = document.getElementById('gscBtn');
+  if (btn) {
+    btn.textContent = 'GSC Connected';
+    btn.style.background = 'linear-gradient(135deg,#2a7a40,#60d080)';
+    btn.style.color = '#fff';
+  }
+}
+
+async function fetchGSCData(siteUrl) {
+  if (!gscToken) return null;
+  var fullUrl = siteUrl.startsWith('http') ? siteUrl : 'https://' + siteUrl;
+  var res = await fetch('/api/gsc?url=' + encodeURIComponent(fullUrl) + '&token=' + encodeURIComponent(gscToken) + '&days=30');
+  var data = await res.json();
+  if (data.error) { 
+    console.warn('GSC error:', data.error);
+    if (data.error.code === 401) { localStorage.removeItem('gsc_token'); gscToken = null; }
+    return null; 
+  }
+  return data;
+}
+
+function updateGSCData(data) {
+  if (!data) return;
+  
+  // Keywords
+  var keywords = data.keywords || [];
+  var totalClicks = keywords.reduce(function(s,k){ return s + (k.clicks||0); }, 0);
+  var avgPos = keywords.length > 0 
+    ? (keywords.reduce(function(s,k){ return s + (k.position||0); }, 0) / keywords.length).toFixed(1)
+    : null;
+
+  // Update avg position KPI
+  if (avgPos) {
+    var posKPI = document.querySelector('#page-overview .kpi:nth-child(4) .kpi-value');
+    if (posKPI) posKPI.textContent = avgPos;
+  }
+
+  // Update keywords count in topbar
+  var kwChip = document.querySelector('.tb-chip:nth-child(2)');
+  if (kwChip) kwChip.textContent = keywords.length + ' keywords';
+
+  // Update sidebar badge
+  var navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(function(item) {
+    if (item.textContent.includes('Keywords')) {
+      var badge = item.querySelector('.nav-badge');
+      if (badge) badge.textContent = keywords.length;
+    }
+  });
+
+  // Update keywords table
+  var kwBody = document.getElementById('kwBody');
+  if (kwBody && keywords.length > 0) {
+    var html = '';
+    keywords.slice(0,20).forEach(function(k) {
+      var pos = Math.round(k.position || 0);
+      var rb = pos <= 3 ? 'r1' : pos <= 10 ? 'r2' : pos <= 20 ? 'r3' : 'r4';
+      var ctr = k.ctr ? (k.ctr * 100).toFixed(1) + '%' : '0%';
+      html += '<tr>';
+      html += '<td style="font-weight:500">' + (k.keys && k.keys[0] || '—') + '</td>';
+      html += '<td><span class="rank ' + rb + '">#' + pos + '</span></td>';
+      html += '<td><span class="t-flat">—</span></td>';
+      html += '<td><span class="spark"></span></td>';
+      html += '<td>' + (k.clicks||0).toLocaleString() + '</td>';
+      html += '<td>' + (k.impressions||0).toLocaleString() + '</td>';
+      html += '<td style="font-family:monospace">' + ctr + '</td>';
+      html += '</tr>';
+    });
+    kwBody.innerHTML = html;
+  }
+
+  // Update KPI numbers on keywords page
+  var kwKPIs = document.querySelectorAll('#page-keywords .kpi-value');
+  if (kwKPIs[0]) kwKPIs[0].textContent = keywords.length;
+  var top3  = keywords.filter(function(k){ return Math.round(k.position||99) <= 3; }).length;
+  var top10 = keywords.filter(function(k){ return Math.round(k.position||99) <= 10; }).length;
+  if (kwKPIs[1]) kwKPIs[1].textContent = top3;
+  if (kwKPIs[2]) kwKPIs[2].textContent = top10;
+  if (kwKPIs[3] && avgPos) kwKPIs[3].textContent = avgPos;
+
+  // Update traffic chart with real data
+  var traffic = data.traffic || [];
+  if (traffic.length > 0 && window.trafficChart) {
+    var labels = traffic.map(function(t){ 
+      var d = new Date(t.keys[0]);
+      return (d.getMonth()+1) + '/' + d.getDate();
+    });
+    var clicks = traffic.map(function(t){ return t.clicks || 0; });
+    window.trafficChart.data.labels = labels;
+    window.trafficChart.data.datasets[0].data = clicks;
+    window.trafficChart.update();
+  }
+
+  // Update pages indexed from impressions coverage
+  var totalImpressions = keywords.reduce(function(s,k){ return s + (k.impressions||0); }, 0);
+  console.log('GSC: ' + keywords.length + ' keywords, ' + totalClicks + ' clicks, avg pos ' + avgPos);
+}
+
+window.addEventListener('DOMContentLoaded', function() { initGSC(); });
+// ── END GSC ───────────────────────────────────────────────
+</script>
 <script>
 // Chart defaults
 Chart.defaults.color = '#50505e';
@@ -1660,6 +1795,12 @@ async function runAudit() {
       updateSpeedPage(mobP, 'mobile');
       updateOverviewVitals(mobP);
       updateDashboardKPIs(window._crawlData, mobP);
+    }
+    // Fetch GSC data if connected
+    if (gscToken) {
+      sm.textContent = 'FETCHING SEARCH CONSOLE DATA...';
+      var gscData = await fetchGSCData(urlVal);
+      if (gscData) updateGSCData(gscData);
     }
     sp.style.width = '100%';
     sm.textContent = mobP ? 'AUDIT COMPLETE' : 'CHECK API KEY IN VERCEL ENV VARS';
