@@ -1578,9 +1578,10 @@ async function runAudit() {
   try {
     sm.textContent = 'CALLING GOOGLE PAGESPEED API...';
     // Run crawler and PSI in parallel
-    var [crawlData, mobData] = await Promise.all([
+    var [crawlData, mobData, deskData] = await Promise.all([
       fetchCrawl(urlVal),
-      fetchPSI(urlVal, 'mobile')
+      fetchPSI(urlVal, 'mobile'),
+      fetchPSI(urlVal, 'desktop')
     ]);
 
     if (crawlData) updateTechnicalPage(crawlData);
