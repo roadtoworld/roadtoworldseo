@@ -5,182 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Meridian SEO — 3D Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
-async function fetchPSI(url, strategy) {
-  var fullUrl = url.startsWith('http') ? url : 'https://' + url;
-  var res = await fetch('/api/psi?url=' + encodeURIComponent(fullUrl) + '&strategy=' + (strategy||'mobile'));
-  var data = await res.json();
-  if (data.error) throw new Error(JSON.stringify(data.error));
-  return data;
-}
-function parsePSI(data) {
-  if (!data || !data.lighthouseResult) return null;
-  var lhr = data.lighthouseResult;
-  var cats = lhr.categories; var aud = lhr.audits;
-  return {
-    performance:   Math.round((cats.performance&&cats.performance.score||0)*100),
-    seo:           Math.round((cats.seo&&cats.seo.score||0)*100),
-    accessibility: Math.round((cats.accessibility&&cats.accessibility.score||0)*100),
-    bestPractices: Math.round((cats['best-practices']&&cats['best-practices'].score||0)*100),
-    lcp:  aud['largest-contentful-paint']&&aud['largest-contentful-paint'].displayValue||'—',
-    cls:  aud['cumulative-layout-shift']&&aud['cumulative-layout-shift'].displayValue||'—',
-    fid:  aud['max-potential-fid']&&aud['max-potential-fid'].displayValue||'—',
-    fcp:  aud['first-contentful-paint']&&aud['first-contentful-paint'].displayValue||'—',
-    ttfb: aud['server-response-time']&&aud['server-response-time'].displayValue||'—',
-    si:   aud['speed-index']&&aud['speed-index'].displayValue||'—',
-    opportunities: Object.values(aud).filter(function(a){
-      return a.details&&a.details.type==='opportunity'&&a.numericValue>0;
-    }).sort(function(a,b){return b.numericValue-a.numericValue;}).slice(0,5)
-  };
-}
-function updateSpeedPage(p, strategy) {
-  if (!p) return;
-  ['lcp','cls','fid','fcp','ttfb','si'].forEach(function(k){
-    var el=document.getElementById('v'+k); if(el) el.textContent=p[k];
-  });
-  if (window._lhChart) {
-    var ds = strategy==='mobile'?0:1;
-    window._lhChart.data.datasets[ds].data=[p.performance,p.seo,p.accessibility,p.bestPractices,40];
-    window._lhChart.update();
-  }
-  if (p.opportunities&&p.opportunities.length) {
-    var html='';
-    p.opportunities.forEach(function(o){
-      var sv=o.displayValue||'';
-      var cl=o.score===0?'sc':'sw'; var ct=o.score===0?'ic-r':'ic-w';
-      html+='<div class="issue"><div class="sev-bar '+cl+'"></div><div class="issue-bd"><div class="issue-title">'+o.title+'</div><div class="issue-desc">'+(o.description||'').split('.')[0]+'</div></div>'+(sv?'<span class="issue-cnt '+ct+'">'+sv+'</span>':'')+'</div>';
-    });
-    var oppEl=document.querySelector('#page-speed .panel:last-child .panel-bd');
-    if(oppEl) oppEl.innerHTML=html;
-  }
-  document.getElementById('sidebarDomain').textContent=document.getElementById('urlInput').value||'example.com';
-}
-function updateOverviewVitals(p) {
-  if (!p) return;
-  var vals=document.querySelectorAll('#page-overview .vital-val');
-  if(vals[0]) vals[0].textContent=p.lcp;
-  if(vals[1]) vals[1].textContent=p.cls;
-  if(vals[2]) vals[2].textContent=p.fid;
-}
-
-async function fetchPSI(url, strategy) {
-  var fullUrl = url.startsWith('http') ? url : 'https://' + url;
-  var res = await fetch('/api/psi?url=' + encodeURIComponent(fullUrl) + '&strategy=' + (strategy||'mobile'));
-  var data = await res.json();
-  if (data.error) throw new Error(JSON.stringify(data.error));
-  return data;
-}
-function parsePSI(data) {
-  if (!data || !data.lighthouseResult) return null;
-  var lhr = data.lighthouseResult;
-  var cats = lhr.categories; var aud = lhr.audits;
-  return {
-    performance:   Math.round((cats.performance&&cats.performance.score||0)*100),
-    seo:           Math.round((cats.seo&&cats.seo.score||0)*100),
-    accessibility: Math.round((cats.accessibility&&cats.accessibility.score||0)*100),
-    bestPractices: Math.round((cats['best-practices']&&cats['best-practices'].score||0)*100),
-    lcp:  (aud['largest-contentful-paint']&&aud['largest-contentful-paint'].displayValue)||'—',
-    cls:  (aud['cumulative-layout-shift']&&aud['cumulative-layout-shift'].displayValue)||'—',
-    fid:  (aud['max-potential-fid']&&aud['max-potential-fid'].displayValue)||'—',
-    fcp:  (aud['first-contentful-paint']&&aud['first-contentful-paint'].displayValue)||'—',
-    ttfb: (aud['server-response-time']&&aud['server-response-time'].displayValue)||'—',
-    si:   (aud['speed-index']&&aud['speed-index'].displayValue)||'—',
-    opportunities: Object.values(aud).filter(function(a){
-      return a.details&&a.details.type==='opportunity'&&a.numericValue>0;
-    }).sort(function(a,b){return b.numericValue-a.numericValue;}).slice(0,5)
-  };
-}
-function updateSpeedPage(p, strategy) {
-  if (!p) return;
-  ['lcp','cls','fid','fcp','ttfb','si'].forEach(function(k){
-    var el=document.getElementById('v'+k); if(el) el.textContent=p[k];
-  });
-  if (window._lhChart) {
-    var ds = strategy==='mobile'?0:1;
-    window._lhChart.data.datasets[ds].data=[p.performance,p.seo,p.accessibility,p.bestPractices,40];
-    window._lhChart.update();
-  }
-  if (p.opportunities&&p.opportunities.length) {
-    var html='';
-    p.opportunities.forEach(function(o){
-      var sv=o.displayValue||'';
-      var cl=o.score===0?'sc':'sw'; var ct=o.score===0?'ic-r':'ic-w';
-      html+='<div class="issue"><div class="sev-bar '+cl+'"></div><div class="issue-bd"><div class="issue-title">'+o.title+'</div><div class="issue-desc">'+(o.description||'').split('.')[0]+'</div></div>'+(sv?'<span class="issue-cnt '+ct+'">'+sv+'</span>':'')+'</div>';
-    });
-    var oppEl=document.querySelector('#page-speed .panel:last-child .panel-bd');
-    if(oppEl) oppEl.innerHTML=html;
-  }
-  document.getElementById('sidebarDomain').textContent=document.getElementById('urlInput').value||'example.com';
-}
-function updateOverviewVitals(p) {
-  if (!p) return;
-  var vals=document.querySelectorAll('#page-overview .vital-val');
-  if(vals[0]) vals[0].textContent=p.lcp;
-  if(vals[1]) vals[1].textContent=p.cls;
-  if(vals[2]) vals[2].textContent=p.fid;
-}
-var currentDev = 'mobile';
-
-
-async function fetchPSI(url, strategy) {
-  var fullUrl = url.startsWith('http') ? url : 'https://' + url;
-  var res = await fetch('/api/psi?url=' + encodeURIComponent(fullUrl) + '&strategy=' + (strategy||'mobile'));
-  var data = await res.json();
-  if (data.error) throw new Error(JSON.stringify(data.error));
-  return data;
-}
-function parsePSI(data) {
-  if (!data || !data.lighthouseResult) return null;
-  var lhr = data.lighthouseResult;
-  var cats = lhr.categories; var aud = lhr.audits;
-  return {
-    performance:   Math.round((cats.performance&&cats.performance.score||0)*100),
-    seo:           Math.round((cats.seo&&cats.seo.score||0)*100),
-    accessibility: Math.round((cats.accessibility&&cats.accessibility.score||0)*100),
-    bestPractices: Math.round((cats['best-practices']&&cats['best-practices'].score||0)*100),
-    lcp:  (aud['largest-contentful-paint']&&aud['largest-contentful-paint'].displayValue)||'—',
-    cls:  (aud['cumulative-layout-shift']&&aud['cumulative-layout-shift'].displayValue)||'—',
-    fid:  (aud['max-potential-fid']&&aud['max-potential-fid'].displayValue)||'—',
-    fcp:  (aud['first-contentful-paint']&&aud['first-contentful-paint'].displayValue)||'—',
-    ttfb: (aud['server-response-time']&&aud['server-response-time'].displayValue)||'—',
-    si:   (aud['speed-index']&&aud['speed-index'].displayValue)||'—',
-    opportunities: Object.values(aud).filter(function(a){
-      return a.details&&a.details.type==='opportunity'&&a.numericValue>0;
-    }).sort(function(a,b){return b.numericValue-a.numericValue;}).slice(0,5)
-  };
-}
-function updateSpeedPage(p, strategy) {
-  if (!p) return;
-  ['lcp','cls','fid','fcp','ttfb','si'].forEach(function(k){
-    var el=document.getElementById('v'+k); if(el) el.textContent=p[k];
-  });
-  if (window._lhChart) {
-    var ds = strategy==='mobile'?0:1;
-    window._lhChart.data.datasets[ds].data=[p.performance,p.seo,p.accessibility,p.bestPractices,40];
-    window._lhChart.update();
-  }
-  if (p.opportunities&&p.opportunities.length) {
-    var html='';
-    p.opportunities.forEach(function(o){
-      var sv=o.displayValue||'';
-      var cl=o.score===0?'sc':'sw'; var ct=o.score===0?'ic-r':'ic-w';
-      html+='<div class="issue"><div class="sev-bar '+cl+'"></div><div class="issue-bd"><div class="issue-title">'+o.title+'</div><div class="issue-desc">'+(o.description||'').split('.')[0]+'</div></div>'+(sv?'<span class="issue-cnt '+ct+'">'+sv+'</span>':'')+'</div>';
-    });
-    var oppEl=document.querySelector('#page-speed .panel:last-child .panel-bd');
-    if(oppEl) oppEl.innerHTML=html;
-  }
-  document.getElementById('sidebarDomain').textContent=document.getElementById('urlInput').value||'example.com';
-}
-function updateOverviewVitals(p) {
-  if (!p) return;
-  var vals=document.querySelectorAll('#page-overview .vital-val');
-  if(vals[0]) vals[0].textContent=p.lcp;
-  if(vals[1]) vals[1].textContent=p.cls;
-  if(vals[2]) vals[2].textContent=p.fid;
-}
-var currentDev = 'mobile';
-
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root {
   --bg:       #0f0f14;
@@ -1311,6 +1136,65 @@ select.filt {
 </div>
 </div>
 
+
+<script>
+async function fetchPSI(url, strategy) {
+  var fullUrl = url.startsWith('http') ? url : 'https://' + url;
+  var res = await fetch('/api/psi?url=' + encodeURIComponent(fullUrl) + '&strategy=' + (strategy||'mobile'));
+  var data = await res.json();
+  if (data.error) throw new Error(JSON.stringify(data.error));
+  return data;
+}
+function parsePSI(data) {
+  if (!data || !data.lighthouseResult) return null;
+  var lhr = data.lighthouseResult;
+  var cats = lhr.categories; var aud = lhr.audits;
+  return {
+    performance:   Math.round((cats.performance&&cats.performance.score||0)*100),
+    seo:           Math.round((cats.seo&&cats.seo.score||0)*100),
+    accessibility: Math.round((cats.accessibility&&cats.accessibility.score||0)*100),
+    bestPractices: Math.round((cats['best-practices']&&cats['best-practices'].score||0)*100),
+    lcp:  (aud['largest-contentful-paint']&&aud['largest-contentful-paint'].displayValue)||'—',
+    cls:  (aud['cumulative-layout-shift']&&aud['cumulative-layout-shift'].displayValue)||'—',
+    fid:  (aud['max-potential-fid']&&aud['max-potential-fid'].displayValue)||'—',
+    fcp:  (aud['first-contentful-paint']&&aud['first-contentful-paint'].displayValue)||'—',
+    ttfb: (aud['server-response-time']&&aud['server-response-time'].displayValue)||'—',
+    si:   (aud['speed-index']&&aud['speed-index'].displayValue)||'—',
+    opportunities: Object.values(aud).filter(function(a){
+      return a.details&&a.details.type==='opportunity'&&a.numericValue>0;
+    }).sort(function(a,b){return b.numericValue-a.numericValue;}).slice(0,5)
+  };
+}
+function updateSpeedPage(p, strategy) {
+  if (!p) return;
+  ['lcp','cls','fid','fcp','ttfb','si'].forEach(function(k){
+    var el=document.getElementById('v'+k); if(el) el.textContent=p[k];
+  });
+  if (window._lhChart) {
+    var ds = strategy==='mobile'?0:1;
+    window._lhChart.data.datasets[ds].data=[p.performance,p.seo,p.accessibility,p.bestPractices,40];
+    window._lhChart.update();
+  }
+  if (p.opportunities&&p.opportunities.length) {
+    var h='';
+    p.opportunities.forEach(function(o){
+      var sv=o.displayValue||'';
+      var cl=o.score===0?'sc':'sw'; var ct=o.score===0?'ic-r':'ic-w';
+      h+='<div class="issue"><div class="sev-bar '+cl+'"></div><div class="issue-bd"><div class="issue-title">'+o.title+'</div><div class="issue-desc">'+(o.description||'').split('.')[0]+'</div></div>'+(sv?'<span class="issue-cnt '+ct+'">'+sv+'</span>':'')+'</div>';
+    });
+    var el=document.querySelector('#page-speed .panel:last-child .panel-bd');
+    if(el) el.innerHTML=h;
+  }
+}
+function updateOverviewVitals(p) {
+  if (!p) return;
+  var vals=document.querySelectorAll('#page-overview .vital-val');
+  if(vals[0]) vals[0].textContent=p.lcp;
+  if(vals[1]) vals[1].textContent=p.cls;
+  if(vals[2]) vals[2].textContent=p.fid;
+}
+var currentDev = 'mobile';
+</script>
 <script>
 // Chart defaults
 Chart.defaults.color = '#50505e';
@@ -1442,7 +1326,7 @@ var lhBuilt = false;
 function buildLighthouse() {
   if (lhBuilt) return;
   var ctx = document.getElementById('lighthouseChart'); if (!ctx) return;
-  var chart = new Chart(ctx, {
+  new Chart(ctx, {
     type:'radar',
     data:{ labels:['Performance','SEO','Accessibility','Best Practices','PWA'], datasets:[
       { label:'Mobile',  data:[72,91,84,79,40], borderColor:'rgba(201,168,76,0.8)', backgroundColor:'rgba(201,168,76,0.08)', borderWidth:2, pointBackgroundColor:'#c9a84c' },
@@ -1453,7 +1337,6 @@ function buildLighthouse() {
       scales:{ r:{ grid:{color:'rgba(255,255,255,0.05)'}, pointLabels:{color:'#9090a0',font:{size:11}}, ticks:{backdropColor:'transparent',color:'#30303c',stepSize:20}, min:0, max:100 } }
     }
   });
-  window._lhChart = chart;
   lhBuilt = true;
 }
 
@@ -1587,21 +1470,15 @@ function buildMap() {
 }
 
 // Device toggle
-var currentDev = 'mobile';
 function switchDev(d) {
   currentDev = d;
-  document.getElementById('btnMob').className  = 'btn' + (d === 'mobile'  ? ' btn-gold' : '');
-  document.getElementById('btnDesk').className = 'btn' + (d === 'desktop' ? ' btn-gold' : '');
-  var parsed = d === 'mobile' ? window._psiMobile : window._psiDesktop;
-  if (parsed) { updateSpeedPage(parsed, d); return; }
-  var fallback = {
-    mobile:  { lcp:'2.8s', cls:'0.04', fid:'48ms', fcp:'1.9s', ttfb:'320ms', si:'3.2s' },
-    desktop: { lcp:'1.4s', cls:'0.02', fid:'18ms', fcp:'0.9s', ttfb:'180ms', si:'1.8s' }
-  };
-  var m = fallback[d];
-  ['lcp','cls','fid','fcp','ttfb','si'].forEach(function(k) {
-    var el = document.getElementById('v' + k); if (el) el.textContent = m[k];
-  });
+  document.getElementById('btnMob').className  = 'btn' + (d==='mobile' ? ' btn-gold' : '');
+  document.getElementById('btnDesk').className = 'btn' + (d==='desktop'? ' btn-gold' : '');
+  var p = d==='mobile' ? window._psiMobile : window._psiDesktop;
+  if (p) { updateSpeedPage(p, d); return; }
+  var fb = { mobile:{lcp:'2.8s',cls:'0.04',fid:'48ms',fcp:'1.9s',ttfb:'320ms',si:'3.2s'}, desktop:{lcp:'1.4s',cls:'0.02',fid:'18ms',fcp:'0.9s',ttfb:'180ms',si:'1.8s'} };
+  var m = fb[d];
+  ['lcp','cls','fid','fcp','ttfb','si'].forEach(function(k){ var el=document.getElementById('v'+k); if(el) el.textContent=m[k]; });
 }
 
 // Scan overlay
@@ -1624,36 +1501,36 @@ async function runAudit() {
   var se = document.getElementById('scanSteps');
   var sm = document.getElementById('scanMsg');
   var sp = document.getElementById('scanProg');
-  var html = '';
-  scanSteps.forEach(function(s) { html += '<div class="scan-step">' + s.toUpperCase() + '</div>'; });
-  se.innerHTML = html;
+  var h = '';
+  scanSteps.forEach(function(s) { h += '<div class="scan-step">' + s.toUpperCase() + '</div>'; });
+  se.innerHTML = h;
   ov.classList.add('show');
   var i = 0;
-  var stepInterval = setInterval(function() {
+  var t = setInterval(function() {
     if (i < scanSteps.length - 2) {
       sm.textContent = scanSteps[i].toUpperCase() + '...';
       se.children[i].classList.add('done');
-      sp.style.width = ((i + 1) / scanSteps.length * 80) + '%';
+      sp.style.width = ((i+1)/scanSteps.length*75) + '%';
       i++;
-    } else { clearInterval(stepInterval); }
+    } else { clearInterval(t); }
   }, 380);
   try {
     sm.textContent = 'CALLING GOOGLE PAGESPEED API...';
     var mobData  = await fetchPSI(urlVal, 'mobile');
     var deskData = await fetchPSI(urlVal, 'desktop');
-    var mobParsed  = parsePSI(mobData);
-    var deskParsed = parsePSI(deskData);
-    if (mobParsed) {
-      window._psiMobile  = mobParsed;
-      window._psiDesktop = deskParsed;
-      updateSpeedPage(mobParsed, 'mobile');
-      updateOverviewVitals(mobParsed);
+    var mobP  = parsePSI(mobData);
+    var deskP = parsePSI(deskData);
+    if (mobP) {
+      window._psiMobile  = mobP;
+      window._psiDesktop = deskP;
+      updateSpeedPage(mobP, 'mobile');
+      updateOverviewVitals(mobP);
     }
     sp.style.width = '100%';
-    sm.textContent = mobParsed ? 'AUDIT COMPLETE' : 'CHECK API KEY IN VERCEL';
+    sm.textContent = mobP ? 'AUDIT COMPLETE' : 'CHECK API KEY IN VERCEL ENV VARS';
     setTimeout(function() {
       ov.classList.remove('show');
-      if (mobParsed) go('speed', null);
+      if (mobP) go('speed', null);
     }, 800);
   } catch(err) {
     console.error('PSI Error:', err);
