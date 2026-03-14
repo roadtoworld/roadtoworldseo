@@ -5,7 +5,64 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Meridian SEO — 3D Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
+async function fetchPSI(url, strategy) {
+  var fullUrl = url.startsWith('http') ? url : 'https://' + url;
+  var res = await fetch('/api/psi?url=' + encodeURIComponent(fullUrl) + '&strategy=' + (strategy||'mobile'));
+  var data = await res.json();
+  if (data.error) throw new Error(JSON.stringify(data.error));
+  return data;
+}
+function parsePSI(data) {
+  if (!data || !data.lighthouseResult) return null;
+  var lhr = data.lighthouseResult;
+  var cats = lhr.categories; var aud = lhr.audits;
+  return {
+    performance:   Math.round((cats.performance&&cats.performance.score||0)*100),
+    seo:           Math.round((cats.seo&&cats.seo.score||0)*100),
+    accessibility: Math.round((cats.accessibility&&cats.accessibility.score||0)*100),
+    bestPractices: Math.round((cats['best-practices']&&cats['best-practices'].score||0)*100),
+    lcp:  aud['largest-contentful-paint']&&aud['largest-contentful-paint'].displayValue||'—',
+    cls:  aud['cumulative-layout-shift']&&aud['cumulative-layout-shift'].displayValue||'—',
+    fid:  aud['max-potential-fid']&&aud['max-potential-fid'].displayValue||'—',
+    fcp:  aud['first-contentful-paint']&&aud['first-contentful-paint'].displayValue||'—',
+    ttfb: aud['server-response-time']&&aud['server-response-time'].displayValue||'—',
+    si:   aud['speed-index']&&aud['speed-index'].displayValue||'—',
+    opportunities: Object.values(aud).filter(function(a){
+      return a.details&&a.details.type==='opportunity'&&a.numericValue>0;
+    }).sort(function(a,b){return b.numericValue-a.numericValue;}).slice(0,5)
+  };
+}
+function updateSpeedPage(p, strategy) {
+  if (!p) return;
+  ['lcp','cls','fid','fcp','ttfb','si'].forEach(function(k){
+    var el=document.getElementById('v'+k); if(el) el.textContent=p[k];
+  });
+  if (window._lhChart) {
+    var ds = strategy==='mobile'?0:1;
+    window._lhChart.data.datasets[ds].data=[p.performance,p.seo,p.accessibility,p.bestPractices,40];
+    window._lhChart.update();
+  }
+  if (p.opportunities&&p.opportunities.length) {
+    var html='';
+    p.opportunities.forEach(function(o){
+      var sv=o.displayValue||'';
+      var cl=o.score===0?'sc':'sw'; var ct=o.score===0?'ic-r':'ic-w';
+      html+='<div class="issue"><div class="sev-bar '+cl+'"></div><div class="issue-bd"><div class="issue-title">'+o.title+'</div><div class="issue-desc">'+(o.description||'').split('.')[0]+'</div></div>'+(sv?'<span class="issue-cnt '+ct+'">'+sv+'</span>':'')+'</div>';
+    });
+    var oppEl=document.querySelector('#page-speed .panel:last-child .panel-bd');
+    if(oppEl) oppEl.innerHTML=html;
+  }
+  document.getElementById('sidebarDomain').textContent=document.getElementById('urlInput').value||'example.com';
+}
+function updateOverviewVitals(p) {
+  if (!p) return;
+  var vals=document.querySelectorAll('#page-overview .vital-val');
+  if(vals[0]) vals[0].textContent=p.lcp;
+  if(vals[1]) vals[1].textContent=p.cls;
+  if(vals[2]) vals[2].textContent=p.fid;
+}
+</script>
 <style>
 :root {
   --bg:       #0f0f14;
@@ -1267,7 +1324,7 @@ var lhBuilt = false;
 function buildLighthouse() {
   if (lhBuilt) return;
   var ctx = document.getElementById('lighthouseChart'); if (!ctx) return;
-  new Chart(ctx, {
+  var chart = new Chart(ctx, {
     type:'radar',
     data:{ labels:['Performance','SEO','Accessibility','Best Practices','PWA'], datasets:[
       { label:'Mobile',  data:[72,91,84,79,40], borderColor:'rgba(201,168,76,0.8)', backgroundColor:'rgba(201,168,76,0.08)', borderWidth:2, pointBackgroundColor:'#c9a84c' },
@@ -1278,6 +1335,7 @@ function buildLighthouse() {
       scales:{ r:{ grid:{color:'rgba(255,255,255,0.05)'}, pointLabels:{color:'#9090a0',font:{size:11}}, ticks:{backdropColor:'transparent',color:'#30303c',stepSize:20}, min:0, max:100 } }
     }
   });
+  window._lhChart = chart;
   lhBuilt = true;
 }
 
@@ -1411,18 +1469,21 @@ function buildMap() {
 }
 
 // Device toggle
-var devData = {
-  mobile:  { lcp:'2.8s', cls:'0.04', fid:'48ms', fcp:'1.9s', ttfb:'320ms', si:'3.2s' },
-  desktop: { lcp:'1.4s', cls:'0.02', fid:'18ms', fcp:'0.9s', ttfb:'180ms', si:'1.8s' }
-};
+var currentDev = 'mobile';
 function switchDev(d) {
-  var m = devData[d];
-  var keys = ['lcp','cls','fid','fcp','ttfb','si'];
-  keys.forEach(function(k) {
-    var el = document.getElementById('v' + k); if (el) el.textContent = m[k];
-  });
+  currentDev = d;
   document.getElementById('btnMob').className  = 'btn' + (d === 'mobile'  ? ' btn-gold' : '');
   document.getElementById('btnDesk').className = 'btn' + (d === 'desktop' ? ' btn-gold' : '');
+  var parsed = d === 'mobile' ? window._psiMobile : window._psiDesktop;
+  if (parsed) { updateSpeedPage(parsed, d); return; }
+  var devData = {
+    mobile:  { lcp:'2.8s', cls:'0.04', fid:'48ms', fcp:'1.9s', ttfb:'320ms', si:'3.2s' },
+    desktop: { lcp:'1.4s', cls:'0.02', fid:'18ms', fcp:'0.9s', ttfb:'180ms', si:'1.8s' }
+  };
+  var m = devData[d];
+  ['lcp','cls','fid','fcp','ttfb','si'].forEach(function(k) {
+    var el = document.getElementById('v' + k); if (el) el.textContent = m[k];
+  });
 }
 
 // Scan overlay
@@ -1438,27 +1499,51 @@ var scanSteps = [
   'Running SEO scoring engine'
 ];
 
-function runAudit() {
-  var ov  = document.getElementById('scanOverlay');
-  var se  = document.getElementById('scanSteps');
-  var sm  = document.getElementById('scanMsg');
-  var sp  = document.getElementById('scanProg');
+async function runAudit() {
+  var urlVal = document.getElementById('urlInput').value.trim();
+  if (!urlVal) { alert('Enter a URL first'); return; }
+  var ov = document.getElementById('scanOverlay');
+  var se = document.getElementById('scanSteps');
+  var sm = document.getElementById('scanMsg');
+  var sp = document.getElementById('scanProg');
   var html = '';
   scanSteps.forEach(function(s) { html += '<div class="scan-step">' + s.toUpperCase() + '</div>'; });
   se.innerHTML = html;
   ov.classList.add('show');
   var i = 0;
-  var t = setInterval(function() {
-    if (i < scanSteps.length) {
+  var stepInterval = setInterval(function() {
+    if (i < scanSteps.length - 2) {
       sm.textContent = scanSteps[i].toUpperCase() + '...';
       se.children[i].classList.add('done');
-      sp.style.width = ((i + 1) / scanSteps.length * 100) + '%';
+      sp.style.width = ((i + 1) / scanSteps.length * 80) + '%';
       i++;
-    } else {
-      clearInterval(t);
-      setTimeout(function() { ov.classList.remove('show'); }, 600);
+    } else { clearInterval(stepInterval); }
+  }, 380);
+  try {
+    sm.textContent = 'CALLING GOOGLE PAGESPEED API...';
+    var [mobData, deskData] = await Promise.all([
+      fetchPSI(urlVal, 'mobile'),
+      fetchPSI(urlVal, 'desktop')
+    ]);
+    var mobParsed  = parsePSI(mobData);
+    var deskParsed = parsePSI(deskData);
+    if (mobParsed) {
+      window._psiMobile  = mobParsed;
+      window._psiDesktop = deskParsed;
+      updateSpeedPage(mobParsed, 'mobile');
+      updateOverviewVitals(mobParsed);
     }
-  }, 400);
+    sp.style.width = '100%';
+    sm.textContent = 'AUDIT COMPLETE';
+    setTimeout(function() {
+      ov.classList.remove('show');
+      if (mobParsed) go('speed', null);
+    }, 700);
+  } catch(err) {
+    console.error(err);
+    sm.textContent = 'ERROR — CHECK CONSOLE';
+    setTimeout(function() { ov.classList.remove('show'); }, 1500);
+  }
 }
 
 function doExportPDF() { alert('PDF export:\nIn production use jsPDF + html2canvas to capture all panels into a branded report.'); }
