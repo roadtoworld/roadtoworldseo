@@ -693,8 +693,8 @@ select.filt {
     </div>
     <div class="nav-group">
       <div class="nav-group-lbl">Intelligence</div>
-      <div class="nav-item" onclick="go('keywords',this)">Keywords<span class="nav-badge nb-dim">284</span></div>
-      <div class="nav-item" onclick="go('backlinks',this)">Backlinks<span class="nav-badge nb-dim">1.8k</span></div>
+      <div class="nav-item" onclick="go('keywords',this)">Keywords<span class="nav-badge nb-dim" id="kwNavBadge">—</span></div>
+      <div class="nav-item" onclick="go('backlinks',this)">Backlinks<span class="nav-badge nb-dim">—</span></div>
       <div class="nav-item" onclick="go('competitors',this)">Competitors</div>
       <div class="nav-item" onclick="go('crawlmap',this)">Crawl Map</div>
     </div>
@@ -720,9 +720,9 @@ select.filt {
         <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="url(#ringG)" stroke-width="6" stroke-linecap="round"
           stroke-dasharray="125.6" stroke-dashoffset="34" style="filter:drop-shadow(0 0 4px rgba(201,168,76,0.5))"/>
       </svg>
-      <div class="sp-num">72</div>
+      <div class="sp-num" id="sidebarScore">—</div>
     </div>
-    <div class="sp-trend">▲ +4 pts this week</div>
+    <div class="sp-trend" id="sidebarTrend">Run Audit</div>
   </div>
 </aside>
 
@@ -737,7 +737,7 @@ select.filt {
     <button class="run-btn" onclick="runAudit()">Run Audit</button>
     <div class="tb-right">
       <div class="tb-chip"><div class="live-dot"></div>Live</div>
-      <div class="tb-chip" onclick="go('keywords',null)">284 keywords</div>
+      <div class="tb-chip" onclick="go('keywords',null)" id="kwCountChip">— keywords</div>
       <div class="tb-chip" onclick="doExportCSV()">↓ CSV</div>
       <div class="tb-chip" onclick="doExportPDF()">↓ PDF</div>
       <button id="gscBtn" class="tb-chip" onclick="connectGSC()" style="cursor:pointer;background:linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.08));border-color:rgba(201,168,76,0.3);color:var(--gold2);">Connect GSC</button>
@@ -752,7 +752,7 @@ select.filt {
       <div>
         <div class="ph-eyebrow">SEO Intelligence Platform</div>
         <div class="ph-title">AUDIT OVERVIEW</div>
-        <div class="ph-sub">example.com · 142 pages · GSC + PSI + GA4 + Bing · Updated just now</div>
+        <div class="ph-sub">Enter a URL above and click Run Audit to get started</div>
       </div>
       <div style="display:flex;gap:8px;">
         <button class="btn" onclick="go('technical',null)">View Issues</button>
@@ -763,26 +763,26 @@ select.filt {
     <div class="kpi-row">
       <div class="kpi">
         <div class="kpi-label">SEO Health Score</div>
-        <div class="kpi-value kv-gold">72</div>
-        <div class="kpi-foot"><span class="kpi-tag kt-warn">▲ +4 this week</span></div>
+        <div class="kpi-value kv-gold" id="healthScore">—</div>
+        <div class="kpi-foot"><span class="kpi-tag kt-warn" id="healthTag">Run Audit</span></div>
         <div class="kpi-bar" style="background:linear-gradient(90deg,var(--gold3),var(--gold2),transparent)"></div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Critical Issues</div>
-        <div class="kpi-value kv-red">7</div>
-        <div class="kpi-foot"><span class="kpi-tag kt-down">2 new</span></div>
+        <div class="kpi-value kv-red" id="criticalCount">—</div>
+        <div class="kpi-foot"><span class="kpi-tag kt-down" id="criticalTag">—</span></div>
         <div class="kpi-bar" style="background:linear-gradient(90deg,var(--red),transparent)"></div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Pages Indexed</div>
-        <div class="kpi-value kv-green">128</div>
-        <div class="kpi-foot"><span class="kpi-tag kt-up">▲ 6 new</span></div>
+        <div class="kpi-value kv-green">—</div>
+        <div class="kpi-foot"><span class="kpi-tag kt-gray">From GSC</span></div>
         <div class="kpi-bar" style="background:linear-gradient(90deg,var(--green),transparent)"></div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Avg. Position</div>
-        <div class="kpi-value kv-plain">14.2</div>
-        <div class="kpi-foot"><span class="kpi-tag kt-up">▲ improved</span></div>
+        <div class="kpi-value kv-plain" id="avgPosition">—</div>
+        <div class="kpi-foot"><span class="kpi-tag kt-gray">From GSC</span></div>
         <div class="kpi-bar" style="background:linear-gradient(90deg,var(--text2),transparent)"></div>
       </div>
     </div>
@@ -791,7 +791,7 @@ select.filt {
       <div>
         <div class="panel">
           <div class="panel-hd">
-            <div><div class="panel-hd-title">Organic Traffic</div><div class="panel-hd-sub">Sessions via GA4 API · free</div></div>
+            <div><div class="panel-hd-title">Organic Traffic</div><div class="panel-hd-sub">Connect Google Search Console for real traffic data</div></div>
             <select class="filt" onchange="updateTraffic(this.value)">
               <option value="30">30 days</option>
               <option value="90">90 days</option>
@@ -945,7 +945,7 @@ select.filt {
   <!-- KEYWORDS -->
   <div id="page-keywords" class="page">
     <div class="ph ph-row">
-      <div><div class="ph-eyebrow">Google Search Console API</div><div class="ph-title">KEYWORD RANKINGS</div><div class="ph-sub">284 keywords · real position data · 100% free</div></div>
+      <div><div class="ph-eyebrow">Google Search Console API</div><div class="ph-title">KEYWORD RANKINGS</div><div class="ph-sub">Connect Google Search Console to see real keyword data</div></div>
       <div style="display:flex;gap:8px;"><select class="filt"><option>All positions</option><option>Top 3</option><option>Top 10</option><option>Top 20</option></select><button class="btn btn-gold">↓ Export</button></div>
     </div>
     <div class="kpi-row">
@@ -960,6 +960,12 @@ select.filt {
     </div>
     <div class="panel">
       <div class="panel-hd"><div class="panel-hd-title">All Keywords</div></div>
+      <div id="kwEmptyState" style="padding:40px;text-align:center;color:var(--text3);">
+        <div style="font-size:32px;margin-bottom:12px;">🔍</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text2);margin-bottom:8px;">NO KEYWORD DATA</div>
+        <div style="font-size:12px;margin-bottom:16px;">Run an audit first, then connect Google Search Console for real rankings</div>
+        <button class="btn btn-gold" onclick="connectGSC()" style="height:36px;padding:0 20px;">Connect Google Search Console</button>
+      </div>
       <div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Keyword</th><th>Position</th><th>Change</th><th>Trend</th><th>Clicks</th><th>Impressions</th><th>CTR</th></tr></thead><tbody id="kwBody"></tbody></table></div>
     </div>
   </div>
@@ -977,7 +983,12 @@ select.filt {
       <div class="panel"><div class="panel-hd"><div class="panel-hd-title">Link Growth</div></div><div class="panel-bd"><div class="chart-wrap"><canvas id="blTrendChart"></canvas></div></div></div>
       <div class="panel"><div class="panel-hd"><div class="panel-hd-title">Anchor Distribution</div></div><div class="panel-bd"><div class="chart-wrap"><canvas id="anchorChart"></canvas></div></div></div>
     </div>
-    <div class="panel"><div class="panel-hd"><div class="panel-hd-title">Top Referring Domains</div></div><div class="panel-bd" id="blList"></div></div>
+    <div class="panel"><div class="panel-hd"><div class="panel-hd-title">Top Referring Domains</div></div>
+  <div class="panel-bd" style="padding:40px;text-align:center;color:var(--text3);">
+    <div style="font-size:32px;margin-bottom:12px;">🔗</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text2);margin-bottom:8px;">BACKLINK DATA REQUIRES PAID API</div>
+    <div style="font-size:12px;">Ahrefs, Moz, or SEMrush API needed for backlink data</div>
+  </div></div>
   </div>
 
   <!-- SPEED -->
@@ -1226,6 +1237,14 @@ function updateDashboardKPIs(crawlData, psiData) {
   if (psiData) score = Math.round((score + psiData.performance) / 2);
   var healthKPI = document.querySelector('#page-overview .kpi:nth-child(1) .kpi-value');
   if (healthKPI) healthKPI.textContent = score;
+  var healthScoreEl = document.getElementById('healthScore');
+  if (healthScoreEl) healthScoreEl.textContent = score;
+  var sidebarScoreEl = document.getElementById('sidebarScore');
+  if (sidebarScoreEl) sidebarScoreEl.textContent = score;
+  var sidebarTrendEl = document.getElementById('sidebarTrend');
+  if (sidebarTrendEl) sidebarTrendEl.textContent = total > 0 ? total + ' issues found' : 'Looking good!';
+  var critTagEl = document.getElementById('criticalTag');
+  if (critTagEl) critTagEl.textContent = critical > 0 ? critical + ' critical' : 'None';
 
   // Update sidebar score ring number
   var spNum = document.querySelector('.sp-num');
