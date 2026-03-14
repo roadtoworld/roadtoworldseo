@@ -1197,6 +1197,72 @@ function updateOverviewVitals(p) {
 var currentDev = 'mobile';
 </script>
 <script>
+
+function updateDashboardKPIs(crawlData, psiData) {
+  if (!crawlData && !psiData) return;
+
+  // Update PSI speed score in score breakdown bar
+  if (psiData) {
+    var speedBar = document.querySelector('#page-overview .bar-row:nth-child(3) .bar-fill');
+    var speedVal = document.querySelector('#page-overview .bar-row:nth-child(3) .bar-val');
+    if (speedBar) speedBar.style.width = psiData.performance + '%';
+    if (speedVal) speedVal.textContent = psiData.performance;
+  }
+
+  if (!crawlData) return;
+
+  // Count real issues
+  var critical = crawlData.issues ? crawlData.issues.filter(function(i){ return i.type==='critical'; }).length : 0;
+  var warnings = crawlData.issues ? crawlData.issues.filter(function(i){ return i.type==='warning'; }).length : 0;
+  var total = critical + warnings;
+
+  // Update Critical Issues KPI
+  var critKPI = document.querySelector('#page-overview .kpi:nth-child(2) .kpi-value');
+  if (critKPI) critKPI.textContent = critical;
+
+  // Update SEO Health Score based on real issues
+  var score = Math.max(0, Math.min(100, 100 - (critical * 15) - (warnings * 5)));
+  if (psiData) score = Math.round((score + psiData.performance) / 2);
+  var healthKPI = document.querySelector('#page-overview .kpi:nth-child(1) .kpi-value');
+  if (healthKPI) healthKPI.textContent = score;
+
+  // Update sidebar score ring number
+  var spNum = document.querySelector('.sp-num');
+  if (spNum) spNum.textContent = score;
+
+  // Update score circle in overview panel
+  var scoreCircle = document.querySelector('#page-overview .panel .panel-bd div[style*="font-size:42px"]');
+  if (scoreCircle) scoreCircle.textContent = score;
+
+  // Update top issues panel with real issues
+  var issuePanel = document.querySelector('#page-overview .panel:nth-child(2) .panel-bd');
+  if (issuePanel && crawlData.issues && crawlData.issues.length > 0) {
+    var html = '';
+    crawlData.issues.slice(0,6).forEach(function(issue) {
+      var cls = issue.type==='critical'?'sc':issue.type==='warning'?'sw':'si';
+      var cnt = issue.type==='critical'?'ic-r':issue.type==='warning'?'ic-w':'';
+      html += '<div class="issue"><div class="sev-bar '+cls+'"></div>';
+      html += '<div class="issue-bd"><div class="issue-title">'+issue.msg+'</div>';
+      html += '<div class="issue-desc">'+crawlData.url+'</div></div>';
+      if (cnt) html += '<span class="issue-cnt '+cnt+'">'+issue.type+'</span>';
+      html += '</div>';
+    });
+    issuePanel.innerHTML = html;
+  }
+
+  // Update page subtitle
+  var sub = document.querySelector('#page-overview .ph-sub');
+  if (sub) {
+    var domain = crawlData.url.replace('https://','').replace('http://','').split('/')[0];
+    sub.textContent = domain + ' · ' + crawlData.totalLinks + ' links · Real data · Updated just now';
+  }
+
+  // Update score breakdown bars
+  var barVals = document.querySelectorAll('#page-overview .bar-val');
+  if (barVals[0]) barVals[0].textContent = Math.round(score * 0.9);
+  if (barVals[1]) barVals[1].textContent = crawlData.issues ? Math.max(0, 100 - total*8) : 78;
+}
+
 async function fetchCrawl(url) {
   var fullUrl = url.startsWith('http') ? url : 'https://' + url;
   var res = await fetch('/api/crawl?url=' + encodeURIComponent(fullUrl));
@@ -1584,7 +1650,7 @@ async function runAudit() {
       fetchPSI(urlVal, 'desktop')
     ]);
 
-    if (crawlData) updateTechnicalPage(crawlData);
+    if (crawlData) { window._crawlData = crawlData; updateTechnicalPage(crawlData); }
 
     var mobP  = parsePSI(mobData);
     var deskP = parsePSI(deskData);
@@ -1593,6 +1659,7 @@ async function runAudit() {
       window._psiDesktop = deskP;
       updateSpeedPage(mobP, 'mobile');
       updateOverviewVitals(mobP);
+      updateDashboardKPIs(window._crawlData, mobP);
     }
     sp.style.width = '100%';
     sm.textContent = mobP ? 'AUDIT COMPLETE' : 'CHECK API KEY IN VERCEL ENV VARS';
